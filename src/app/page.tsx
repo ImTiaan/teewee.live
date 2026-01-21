@@ -83,8 +83,8 @@ export default async function Home() {
         </div>
 
         <div className="space-y-2">
-          <h1 className={styles.title} style={{ fontSize: '5rem' }}>Teewee</h1>
-          <p className="text-zinc-400 text-lg tracking-widest font-light uppercase opacity-80">
+          <h1 className={styles.title}>Teewee</h1>
+          <p className="text-zinc-400 text-lg tracking-widest font-light uppercase opacity-80 px-4 text-center">
             Streamer & Content Creator
           </p>
         </div>

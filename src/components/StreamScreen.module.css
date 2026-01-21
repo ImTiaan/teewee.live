@@ -122,3 +122,39 @@
     50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 30px rgba(20, 255, 150, 0.2); }
     100% { opacity: 0.9; transform: scale(1); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
 }
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .content {
+        gap: 2rem;
+        width: 100%;
+        padding: 0 1.5rem;
+    }
+
+    .logoContainer {
+        width: 120px;
+        height: 120px;
+    }
+
+    .title {
+        font-size: 3.5rem;
+    }
+
+    .socials {
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        padding-top: 2rem;
+        max-width: 100%;
+    }
+
+    .socialItem {
+        font-size: 0.9rem;
+        /* Stack them nicely or flow them */
+        flex: 0 1 auto;
+    }
+
+    /* Hide separators on mobile as they break the flow when wrapped */
+    .socialItem:not(:last-child)::after {
+        display: none;
+    }
+}
