@@ -1,0 +1,13 @@
+{
+  "Version": "15.0.0",
+  "Name": "Teewee Website Uploader",
+  "DestinationType": "ImageUploader",
+  "RequestMethod": "POST",
+  "RequestURL": "https://teewee.live/api/upload",
+  "Headers": {
+    "Authorization": "Bearer REPLACE_WITH_YOUR_UPLOAD_SECRET"
+  },
+  "Body": "MultipartFormData",
+  "FileFormName": "file",
+  "URL": "{json:url}"
+}

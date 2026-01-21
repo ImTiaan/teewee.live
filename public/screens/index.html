@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Animation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="bgCanvas"></canvas>
+    <div class="content">
+        <div class="logo-container">
+            <!-- User should place their image at assets/logo.png -->
+            <img src="assets/logo.png" alt="Stream Logo" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+            <div class="logo-placeholder" style="display:none">tw</div>
+        </div>
+        <!-- Removed data-text since we aren't glitching anymore -->
+        <h1>Starting Soon</h1>
+        <div class="socials">
+            <div class="social-item">
+                <img src="https://cdn.simpleicons.org/twitch/white" alt="Twitch">
+                <span>teeweeTTV</span>
+            </div>
+            <div class="social-item">
+                <img src="https://cdn.simpleicons.org/kick/white" alt="Kick">
+                <span>itsteewee</span>
+            </div>
+            <div class="social-item">
+                <img src="https://cdn.simpleicons.org/youtube/white" alt="YouTube">
+                <span>itsteewee</span>
+            </div>
+            <div class="social-item">
+                <img src="https://cdn.simpleicons.org/tiktok/white" alt="TikTok">
+                <span>teeweeTT</span>
+            </div>
+            <div class="social-item">
+                <img src="https://cdn.simpleicons.org/instagram/white" alt="Instagram">
+                <span>teeweeIG</span>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
