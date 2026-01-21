@@ -1,0 +1,123 @@
+.container {
+    background-color: #050a08; /* Very dark, almost black green */
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Background is now handled by AnimatedBackground component, but we keep container for layout */
+
+.content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+}
+
+.logoContainer {
+    width: 180px;
+    height: 180px;
+    position: relative;
+    /* Slow, sexy float */
+    animation: float 8s ease-in-out infinite; 
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(20, 255, 150, 0.15));
+    transition: transform 0.3s ease;
+}
+
+.logoPlaceholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 300;
+    font-size: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    letter-spacing: 2px;
+}
+
+.title {
+    font-family: 'Block Script', 'Segoe UI', sans-serif; /* Use user's font */
+    font-size: 6rem; /* Larger for script font */
+    font-weight: 400;
+    letter-spacing: 0.1rem;
+    color: #e2e8f0;
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    margin: 0;
+    line-height: 1.2;
+    /* Gentle pulse */
+    animation: textPulse 4s ease-in-out infinite;
+}
+
+.socials {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap; /* Force single line */
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 2rem;
+    margin-top: 1rem;
+    width: 100%;
+    max-width: 1400px; /* Allow it to spread out */
+}
+
+.socialItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem; /* Slightly smaller text */
+    font-weight: 300;
+    opacity: 0.8;
+    letter-spacing: 1px;
+    transition: opacity 0.3s ease;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Separator logic */
+.socialItem:not(:last-child)::after {
+    content: "|";
+    margin: 0 1rem;
+    opacity: 0.4;
+    font-weight: 100;
+}
+
+.socialItem:hover {
+    opacity: 1;
+}
+
+.socialItem img {
+    width: 16px; /* Smaller icons */
+    height: 16px;
+    /* Ensure they are white even if CDN fails to serve colored variant */
+    filter: brightness(0) invert(1);
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes textPulse {
+    0% { opacity: 0.9; transform: scale(1); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 30px rgba(20, 255, 150, 0.2); }
+    100% { opacity: 0.9; transform: scale(1); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+}
