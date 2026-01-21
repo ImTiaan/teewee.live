@@ -7,7 +7,7 @@ export const revalidate = 60; // Revalidate at least every 60 seconds
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Teewee Live - Streamer & Content Creator',
+  title: 'Teewee',
   description: 'Official website for Teewee. Watch live streams, view screens, and connect with the community.',
 };
 

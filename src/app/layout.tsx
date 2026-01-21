@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Teewee Live",
+    title: "Teewee",
     description: "Streamer & Content Creator",
     images: ["/screens/assets/logo.png"],
     creator: "@teewee", // Update this if you have a specific Twitter handle
