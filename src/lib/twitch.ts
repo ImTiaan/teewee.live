@@ -20,7 +20,8 @@ export async function getTwitchToken(): Promise<string | null> {
   try {
     const res = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`, {
       method: 'POST',
-      cache: 'no-store',
+      cache: 'force-cache',
+      next: { revalidate: 3600 } // Cache token for 1 hour
     });
 
     if (!res.ok) {

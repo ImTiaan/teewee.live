@@ -1,6 +1,7 @@
 import { getStreamStatus, TWITCH_USERNAME } from '@/lib/twitch';
 
 export const revalidate = 60; // Revalidate at least every 60 seconds
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const status = await getStreamStatus();
