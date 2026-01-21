@@ -19,7 +19,14 @@ export async function POST(request: Request) {
       access: 'public',
     });
 
-    return NextResponse.json(blob);
+    // Return the custom domain URL
+    // We use /u/ path which is rewritten in next.config.ts to the blob storage
+    const customUrl = `https://www.teewee.live/u/${blob.pathname}`;
+
+    return NextResponse.json({
+      ...blob,
+      url: customUrl,
+    });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
