@@ -1,9 +1,15 @@
 import { getStreamStatus, TWITCH_USERNAME, KICK_USERNAME } from '@/lib/streaming';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import styles from '@/components/StreamScreen.module.css'; // Reusing styles for consistency
+import { Metadata } from 'next';
 
 export const revalidate = 60; // Revalidate at least every 60 seconds
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Teewee Live - Streamer & Content Creator',
+  description: 'Official website for Teewee. Watch live streams, view screens, and connect with the community.',
+};
 
 export default async function Home() {
   const status = await getStreamStatus();
