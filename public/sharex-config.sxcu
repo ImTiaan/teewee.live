@@ -3,7 +3,7 @@
   "Name": "Teewee Website Uploader",
   "DestinationType": "ImageUploader",
   "RequestMethod": "POST",
-  "RequestURL": "https://teewee.live/api/upload",
+  "RequestURL": "https://www.teewee.live/api/upload",
   "Headers": {
     "Authorization": "Bearer REPLACE_WITH_YOUR_UPLOAD_SECRET"
   },
