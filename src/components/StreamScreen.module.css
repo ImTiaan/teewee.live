@@ -104,8 +104,9 @@
 }
 
 .socialItem img {
-    width: 16px; /* Smaller icons */
-    height: 16px;
+    width: 18px; /* Slightly larger to prevent detail loss */
+    height: 18px;
+    object-fit: contain; /* Ensure full icon is visible */
     /* Ensure they are white even if CDN fails to serve colored variant */
     filter: brightness(0) invert(1);
 }
