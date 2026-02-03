@@ -91,6 +91,12 @@
     white-space: nowrap; /* Prevent text wrapping */
 }
 
+.socialItem img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
 /* Separator logic */
 .socialItem:not(:last-child)::after {
     content: "|";
