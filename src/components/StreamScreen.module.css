@@ -126,14 +126,34 @@
     .socialItem:not(:last-child)::after {
         display: none;
     }
+
+    .pillContainer {
+        width: 90%;
+        flex-wrap: wrap;
+        justify-content: center;
+        bottom: 2rem;
+        gap: 1rem;
+    }
+
+    .pill {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+    }
 }
 
-/* Games Ghost Pill */
-.gamesPill {
+/* Pill Container */
+.pillContainer {
     position: fixed;
     bottom: 3rem;
     left: 50%;
     transform: translateX(-50%);
+    display: flex;
+    gap: 1.5rem;
+    z-index: 10;
+}
+
+/* Generic Ghost Pill */
+.pill {
     display: flex;
     align-items: center;
     gap: 0.8rem;
@@ -148,25 +168,24 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     transition: all 0.3s ease;
-    z-index: 10;
 }
 
-.gamesPill:hover {
+.pill:hover {
     background: rgba(20, 255, 150, 0.1);
     border-color: rgba(20, 255, 150, 0.3);
     color: #fff;
     box-shadow: 0 0 20px rgba(20, 255, 150, 0.15);
-    transform: translateX(-50%) translateY(-3px);
+    transform: translateY(-3px);
 }
 
-.gamesPill svg {
+.pill svg {
     width: 18px;
     height: 18px;
     opacity: 0.8;
     transition: transform 0.3s ease;
 }
 
-.gamesPill:hover svg {
+.pill:hover svg {
     transform: scale(1.1) rotate(-5deg);
     opacity: 1;
 }

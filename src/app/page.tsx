@@ -120,30 +120,58 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Games Link - Ghost Pill */}
-      <a 
-        href="https://games.teewee.live" 
-        className={styles.gamesPill}
-        target="_blank" 
-        rel="noopener noreferrer"
-      >
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
+      {/* Bottom Pills */}
+      <div className={styles.pillContainer}>
+        {/* Games Link */}
+        <a 
+          href="https://games.teewee.live" 
+          className={styles.pill}
+          target="_blank" 
+          rel="noopener noreferrer"
         >
-          <line x1="6" x2="10" y1="12" y2="12" />
-          <line x1="8" x2="8" y1="10" y2="14" />
-          <line x1="15" x2="15.01" y1="13" y2="13" />
-          <line x1="18" x2="18.01" y1="11" y2="11" />
-          <rect x="2" y="6" width="20" height="12" rx="2" />
-        </svg>
-        <span>Games</span>
-      </a>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <line x1="6" x2="10" y1="12" y2="12" />
+            <line x1="8" x2="8" y1="10" y2="14" />
+            <line x1="15" x2="15.01" y1="13" y2="13" />
+            <line x1="18" x2="18.01" y1="11" y2="11" />
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+          </svg>
+          <span>Games</span>
+        </a>
+
+        {/* Chase Law Link */}
+        <a 
+          href="https://chaselaw.teewee.live" 
+          className={styles.pill}
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="m14 13-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10" />
+            <path d="m16 16 6-6" />
+            <path d="m8 8 6-6" />
+            <path d="m9 7 8 8" />
+            <path d="m21 11-8-8" />
+          </svg>
+          <span>Chase Law</span>
+        </a>
+      </div>
     </main>
   );
 }
