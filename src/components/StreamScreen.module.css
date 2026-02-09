@@ -105,6 +105,17 @@
     font-weight: 100;
 }
 
+/* Keyframes */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes textPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(0.98); }
+}
+
 /* Mobile Optimizations */
 @media (max-width: 768px) {
     .content {
