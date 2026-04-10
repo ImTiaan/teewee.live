@@ -32,7 +32,7 @@ export default function StreamScreen({ title }: StreamScreenProps) {
             <div className={styles.socials}>
                 <div className={styles.socialItem}>
                     <img src="https://cdn.simpleicons.org/twitch/white" alt="Twitch" />
-                    <span>teeweeTTV</span>
+                    <span>its_teewee</span>
                 </div>
                 <div className={styles.socialItem}>
                     <img src="https://cdn.simpleicons.org/kick/white" alt="Kick" />

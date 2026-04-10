@@ -99,7 +99,7 @@ export default async function Home() {
         <div className={styles.socials}>
             <a href={`https://twitch.tv/${TWITCH_USERNAME}`} target="_blank" rel="noopener noreferrer" className={styles.socialItem}>
                 <img src="https://cdn.simpleicons.org/twitch/white" alt="Twitch" />
-                <span>teeweeTTV</span>
+                <span>its_teewee</span>
             </a>
             <a href={`https://kick.com/${KICK_USERNAME}`} target="_blank" rel="noopener noreferrer" className={styles.socialItem}>
                 <img src="https://cdn.simpleicons.org/kick/white" alt="Kick" />

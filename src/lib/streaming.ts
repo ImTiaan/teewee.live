@@ -1,4 +1,4 @@
-export const TWITCH_USERNAME = 'teeweeTTV';
+export const TWITCH_USERNAME = 'its_teewee';
 export const KICK_USERNAME = 'itsteewee';
 export const YOUTUBE_CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID || 'UCW7jgjUMB4C_2Q7sFvig9IQ';
 
