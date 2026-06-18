@@ -1,6 +1,7 @@
 .container {
-    background-color: #050a08;
-    background: radial-gradient(circle at 50% 50%, #0f2e26 0%, #050a08 70%);
+    background:
+        radial-gradient(circle at 50% 45%, rgba(19, 74, 58, 0.18) 0%, rgba(5, 10, 8, 0) 38%),
+        linear-gradient(180deg, #040806 0%, #050a08 46%, #030605 100%);
     position: absolute;
     top: 0;
     left: 0;
@@ -10,7 +11,6 @@
     overflow: hidden;
 }
 
-/* Subtle animated grain/noise overlay for texture */
 .container::after {
     content: "";
     position: absolute;
@@ -22,6 +22,17 @@
     opacity: 0.04;
     pointer-events: none;
     animation: grain 8s steps(10) infinite;
+    z-index: 1;
+}
+
+.container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(27, 170, 125, 0.08) 0%, rgba(27, 170, 125, 0.03) 18%, rgba(0, 0, 0, 0) 56%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 62%);
+    pointer-events: none;
     z-index: 1;
 }
 
@@ -38,12 +49,117 @@
     90% { transform: translate(-10%, 10%); }
 }
 
-.canvas {
+.aurora {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: -24%;
+    border-radius: 45%;
+    filter: blur(110px);
+    mix-blend-mode: screen;
+    opacity: 0.34;
+    pointer-events: none;
     z-index: 0;
-    opacity: 0.6; /* Subtle movement */
+    transform-origin: center;
+}
+
+.auroraOne {
+    background:
+        linear-gradient(
+            130deg,
+            rgba(10, 38, 31, 0) 0%,
+            rgba(12, 73, 57, 0.68) 22%,
+            rgba(27, 170, 125, 0.24) 48%,
+            rgba(7, 28, 22, 0) 76%
+        );
+    transform: translate(-12%, -18%) rotate(-14deg) scale(1.28);
+    animation: auroraDriftOne 26s ease-in-out infinite alternate;
+}
+
+.auroraTwo {
+    background:
+        linear-gradient(
+            112deg,
+            rgba(4, 17, 14, 0) 0%,
+            rgba(9, 58, 46, 0.58) 28%,
+            rgba(13, 100, 77, 0.2) 52%,
+            rgba(4, 17, 14, 0) 78%
+        );
+    transform: translate(14%, 8%) rotate(18deg) scale(1.2);
+    opacity: 0.26;
+    animation: auroraDriftTwo 30s ease-in-out infinite alternate;
+}
+
+.auroraThree {
+    background:
+        linear-gradient(
+            168deg,
+            rgba(7, 28, 22, 0) 0%,
+            rgba(10, 66, 52, 0.4) 34%,
+            rgba(27, 170, 125, 0.12) 50%,
+            rgba(7, 28, 22, 0) 72%
+        );
+    transform: translate(-4%, 18%) rotate(-8deg) scale(1.1);
+    opacity: 0.18;
+    animation: auroraDriftThree 34s ease-in-out infinite alternate;
+}
+
+.glow {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(12, 92, 70, 0.16) 0%, rgba(12, 92, 70, 0.08) 16%, rgba(12, 92, 70, 0) 46%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.veil {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 28%, rgba(0, 0, 0, 0.12) 64%, rgba(0, 0, 0, 0.42) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes auroraDriftOne {
+    0% {
+        transform: translate(-15%, -20%) rotate(-16deg) scale(1.24);
+    }
+    50% {
+        transform: translate(-8%, -10%) rotate(-10deg) scale(1.32);
+    }
+    100% {
+        transform: translate(-3%, -22%) rotate(-6deg) scale(1.26);
+    }
+}
+
+@keyframes auroraDriftTwo {
+    0% {
+        transform: translate(15%, 6%) rotate(16deg) scale(1.16);
+    }
+    50% {
+        transform: translate(8%, 14%) rotate(20deg) scale(1.24);
+    }
+    100% {
+        transform: translate(3%, 10%) rotate(24deg) scale(1.18);
+    }
+}
+
+@keyframes auroraDriftThree {
+    0% {
+        transform: translate(-8%, 20%) rotate(-10deg) scale(1.06);
+    }
+    50% {
+        transform: translate(2%, 12%) rotate(-4deg) scale(1.14);
+    }
+    100% {
+        transform: translate(10%, 18%) rotate(2deg) scale(1.08);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auroraOne,
+    .auroraTwo,
+    .auroraThree {
+        animation: none;
+    }
 }
