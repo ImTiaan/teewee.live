@@ -1,0 +1,955 @@
+StreamElements Custom Widget – All Alerts (Draft)
+
+This draft keeps your existing layout, logo, font, timings and dedupe logic, and adds:
+- Per-alert-type configurable accent colours (spokes + centre circle)
+- Raid alerts (name + raider count)
+- Hype Train alerts (start, level up, end) with basic state tracking
+
+Paste each block into the matching StreamElements Custom Widget tab:
+- Fields
+- HTML
+- CSS
+- JS
+
+--------------------------------------------
+FIELDS (paste into the Fields tab)
+--------------------------------------------
+
+{
+  "widgetName": {
+    "type": "text",
+    "label": "Widget Name",
+    "value": "Teewee Dramatic Twitch Alerts (All Types)"
+  },
+  "widgetAuthor": {
+    "type": "text",
+    "label": "Author",
+    "value": "teewee"
+  },
+  "displayDuration": {
+    "type": "number",
+    "label": "Alert Duration (ms)",
+    "value": 6200,
+    "min": 3000,
+    "max": 15000,
+    "step": 100
+  },
+  "accentFollow": {
+    "type": "colorpicker",
+    "label": "Colour: Follow",
+    "value": "#053F33"
+  },
+  "accentBits": {
+    "type": "colorpicker",
+    "label": "Colour: Bits",
+    "value": "#F5B301"
+  },
+  "accentSubscribed": {
+    "type": "colorpicker",
+    "label": "Colour: Subscribed",
+    "value": "#04473C"
+  },
+  "accentPrimeSub": {
+    "type": "colorpicker",
+    "label": "Colour: Prime Sub",
+    "value": "#00A8E1"
+  },
+  "accentGiftedSubs": {
+    "type": "colorpicker",
+    "label": "Colour: Gifted Subs",
+    "value": "#2ED9B0"
+  },
+  "accentRaid": {
+    "type": "colorpicker",
+    "label": "Colour: Raid",
+    "value": "#C0CBD1"
+  },
+  "accentHypeTrain": {
+    "type": "colorpicker",
+    "label": "Colour: Hype Train",
+    "value": "#9146FF"
+  },
+  "debugMode": {
+    "type": "checkbox",
+    "label": "Debug Mode (logs payloads)",
+    "value": false
+  }
+}
+
+--------------------------------------------
+HTML (paste into the HTML tab)
+--------------------------------------------
+
+<div id="se-root" class="se-root">
+  <div id="alert" class="alert" data-type="follow">
+    <div class="edge-glow edge-glow-top"></div>
+    <div class="edge-glow edge-glow-bottom"></div>
+
+    <div class="burst-wrap">
+      <div class="burst"></div>
+    </div>
+
+    <div class="centre-circle"></div>
+
+    <div class="centre-cutout">
+      <img
+        class="centre-logo"
+        src="https://www.teewee.live/screens/assets/logo.png"
+        alt="Teewee logo"
+      />
+    </div>
+
+    <div class="copy-wrap">
+      <h1 id="headline" class="headline">Someone just followed</h1>
+    </div>
+  </div>
+</div>
+
+--------------------------------------------
+CSS (paste into the CSS tab)
+--------------------------------------------
+
+@font-face {
+  font-family: 'Block Script';
+  src: url('https://www.teewee.live/screens/assets/Block%20Script.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --alert-duration: 6200ms;
+
+  --accent-follow: #053f33;
+  --accent-bits: #f5b301;
+  --accent-subscribed: #04473c;
+  --accent-prime-sub: #00a8e1;
+  --accent-gifted-subs: #2ed9b0;
+  --accent-raid: #c0cbd1;
+  --accent-hypetrain: #9146ff;
+
+  --ray-green: var(--accent-follow);
+  --headline-colour: rgba(246, 248, 247, 0.98);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.se-root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+}
+
+.alert {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.alert.is-active {
+  opacity: 1;
+}
+
+.edge-glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+}
+
+.edge-glow-top {
+  top: 0;
+}
+
+.edge-glow-bottom {
+  bottom: 0;
+  transform: rotate(180deg);
+}
+
+.alert.is-active .edge-glow {
+  animation: edgeFade var(--alert-duration) ease both;
+}
+
+.burst-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2400px;
+  height: 2400px;
+  transform: translate(-50%, -50%);
+}
+
+.burst {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.92) rotate(-10deg);
+  background: repeating-conic-gradient(
+    from -6deg,
+    var(--ray-green) 0deg 10deg,
+    transparent 10deg 17deg
+  );
+  mask-image: radial-gradient(circle at center, transparent 0 148px, rgba(0, 0, 0, 1) 149px 100%);
+  -webkit-mask-image: radial-gradient(circle at center, transparent 0 148px, rgba(0, 0, 0, 1) 149px 100%);
+}
+
+.alert.is-active .burst {
+  animation:
+    burstIn 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards,
+    burstSpin var(--alert-duration) linear forwards;
+}
+
+.centre-circle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 312px;
+  height: 312px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--ray-green);
+  opacity: 0;
+}
+
+.alert.is-active .centre-circle {
+  animation: circleIn 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.centre-cutout {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260px;
+  height: 260px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+
+.alert.is-active .centre-cutout {
+  animation: logoIn 760ms cubic-bezier(0.16, 1, 0.3, 1) 60ms forwards;
+}
+
+.centre-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.24));
+}
+
+.copy-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(1200px, 90vw);
+  transform: translate(-50%, 110px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+}
+
+.alert.is-active .copy-wrap {
+  animation: copyIn var(--alert-duration) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.headline {
+  margin: 0;
+  text-align: center;
+  color: var(--headline-colour);
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-size: clamp(64px, 7vw, 96px);
+  font-weight: 400;
+  line-height: 0.96;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.20),
+    0 4px 0 rgba(7, 31, 26, 0.7),
+    0 0 18px rgba(0, 0, 0, 0.28);
+}
+
+.alert[data-type="follow"] {
+  --ray-green: var(--accent-follow);
+}
+
+.alert[data-type="bits"] {
+  --ray-green: var(--accent-bits);
+}
+
+.alert[data-type="subscribed"] {
+  --ray-green: var(--accent-subscribed);
+}
+
+.alert[data-type="prime-sub"] {
+  --ray-green: var(--accent-prime-sub);
+}
+
+.alert[data-type="gifted-subs"] {
+  --ray-green: var(--accent-gifted-subs);
+}
+
+.alert[data-type="raid"] {
+  --ray-green: var(--accent-raid);
+}
+
+.alert[data-type="hypetrain"] {
+  --ray-green: var(--accent-hypetrain);
+}
+
+@keyframes burstIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) rotate(-10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes burstSpin {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(150deg);
+  }
+}
+
+@keyframes circleIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.82);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes logoIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes copyIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 140px);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(-50%, 110px);
+  }
+  84% {
+    opacity: 1;
+    transform: translate(-50%, 110px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 95px);
+  }
+}
+
+@keyframes edgeFade {
+  0% {
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.75;
+  }
+  84% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+--------------------------------------------
+JS (paste into the JS tab)
+--------------------------------------------
+
+const state = {
+  queue: [],
+  active: false,
+  duration: 6200,
+  debugMode: false,
+  fingerprints: new Map(),
+  hypetrainActive: null,
+  hypetrainLevel: null,
+  giftBulkAt: 0,
+  giftBulkSender: '',
+  giftBulkCount: 0,
+  pendingGiftRecipients: [],
+  pendingGiftTimer: 0
+};
+
+const els = {};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function cacheEls() {
+  els.alert = $('alert');
+  els.headline = $('headline');
+}
+
+function logDebug(label, value) {
+  if (!state.debugMode) return;
+  console.log(`[Teewee Alerts] ${label}`, value);
+}
+
+function setCssVar(name, value) {
+  if (!value) return;
+  document.documentElement.style.setProperty(name, value);
+}
+
+function applyFieldData(fieldData) {
+  if (!fieldData) return;
+
+  state.duration = Number(fieldData.displayDuration) || 6200;
+  state.debugMode = Boolean(fieldData.debugMode);
+
+  setCssVar('--alert-duration', `${state.duration}ms`);
+
+  setCssVar('--accent-follow', fieldData.accentFollow);
+  setCssVar('--accent-bits', fieldData.accentBits);
+  setCssVar('--accent-subscribed', fieldData.accentSubscribed);
+  setCssVar('--accent-prime-sub', fieldData.accentPrimeSub);
+  setCssVar('--accent-gifted-subs', fieldData.accentGiftedSubs);
+  setCssVar('--accent-raid', fieldData.accentRaid);
+  setCssVar('--accent-hypetrain', fieldData.accentHypeTrain);
+}
+
+function normaliseDetail(detail) {
+  const event = detail && typeof detail.event === 'object' ? detail.event : {};
+  const eventData = event && typeof event.data === 'object' ? event.data : {};
+
+  const mergedData = {
+    ...(event || {}),
+    ...(eventData || {})
+  };
+
+  return {
+    listener: detail && detail.listener ? detail.listener : '',
+    event,
+    data: mergedData
+  };
+}
+
+function resolveString(payload, keys, fallback = '') {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+
+  return fallback;
+}
+
+function resolveNumber(payload, keys, fallback = 0) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
+}
+
+function resolveBoolean(payload, keys, fallback = false) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    if (typeof value === 'boolean') return value;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+  }
+
+  return fallback;
+}
+
+function resolveUsername(payload, fallback = 'Someone') {
+  return (
+    resolveString(
+      payload,
+      ['name', 'username', 'displayName', 'display_name', 'userName', 'senderName'],
+      ''
+    ) || fallback
+  );
+}
+
+function resolveAmountInt(payload, fallback = 1) {
+  const n = resolveNumber(payload, ['amount', 'count', 'months', 'viewers'], NaN);
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return fallback;
+}
+
+function looksPrime(payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  const candidates = [
+    data.isPrime,
+    data.prime,
+    data.plan,
+    data.planName,
+    data.subPlan,
+    data.subscriptionPlan,
+    data.tier,
+    data.message,
+    event.isPrime,
+    event.prime,
+    event.plan,
+    event.planName,
+    event.subPlan,
+    event.subscriptionPlan,
+    event.tier,
+    event.message
+  ];
+
+  return candidates.some((value) => {
+    if (value === true) return true;
+    if (typeof value !== 'string' && typeof value !== 'number') return false;
+    return String(value).toLowerCase().includes('prime');
+  });
+}
+
+function isGiftDerivedSubscriberEvent(listener, payload) {
+  if (listener === 'subscriber-gifted-latest') return false;
+
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  return Boolean(
+    data.sender ||
+      data.gifted ||
+      data.isGift ||
+      data.isGifted ||
+      data.bulkGifted ||
+      event.sender ||
+      event.gifted ||
+      event.isGift ||
+      event.isGifted ||
+      event.bulkGifted
+  );
+}
+
+function cleanupFingerprints() {
+  const now = Date.now();
+  for (const [key, timestamp] of state.fingerprints.entries()) {
+    if (now - timestamp > 8000) {
+      state.fingerprints.delete(key);
+    }
+  }
+}
+
+function buildFingerprint(listener, payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  const parts = [
+    listener,
+    data._id,
+    data.id,
+    data.name,
+    data.username,
+    data.displayName,
+    data.sender,
+    data.gifted,
+    data.amount,
+    data.tier,
+    data.level,
+    data.active,
+    data.levelChanged,
+    data.message,
+    data.createdAt,
+    event._id,
+    event.id
+  ];
+
+  return parts.filter((part) => part !== undefined && part !== null && part !== '').join('|');
+}
+
+function isDuplicateEvent(listener, payload) {
+  cleanupFingerprints();
+
+  const fingerprint = buildFingerprint(listener, payload);
+  if (!fingerprint) return false;
+
+  const now = Date.now();
+  const previous = state.fingerprints.get(fingerprint);
+
+  state.fingerprints.set(fingerprint, now);
+
+  if (!previous) return false;
+  return now - previous < 3000;
+}
+
+function buildHypeTrainAlert(payload) {
+  const active = resolveBoolean(payload, ['active'], false);
+  const level = resolveNumber(payload, ['level'], 0);
+  const levelChanged = resolveBoolean(payload, ['levelChanged', 'level_changed'], false);
+
+  const prevActive = state.hypetrainActive;
+  const prevLevel = state.hypetrainLevel;
+
+  state.hypetrainActive = active;
+  state.hypetrainLevel = level || prevLevel;
+
+  if (active === true && prevActive !== true) {
+    return {
+      type: 'hypetrain',
+      headline: 'Hype Train started'
+    };
+  }
+
+  if (active === true && (levelChanged === true || (Number.isFinite(level) && level > (prevLevel || 0)))) {
+    const displayLevel = Number.isFinite(level) && level > 0 ? level : prevLevel || 1;
+    return {
+      type: 'hypetrain',
+      headline: `Hype Train level ${displayLevel}`
+    };
+  }
+
+  if (active === false && prevActive === true) {
+    return {
+      type: 'hypetrain',
+      headline: 'Hype Train ended'
+    };
+  }
+
+  return null;
+}
+
+function giftSuffix(count) {
+  return count === 1 ? 'sub' : 'subs';
+}
+
+function buildGiftBulkAlert(gifter, count) {
+  return {
+    type: 'gifted-subs',
+    headline: `${gifter} gifted ${count} ${giftSuffix(count)}`,
+    _giftBulk: true
+  };
+}
+
+function buildGiftRecipientAlert(recipient, gifter) {
+  return {
+    type: 'gifted-subs',
+    headline: `${recipient} received a gifted sub from ${gifter}`
+  };
+}
+
+function flushPendingGiftRecipients() {
+  if (!state.pendingGiftRecipients.length) return;
+
+  const recipients = state.pendingGiftRecipients.slice();
+  state.pendingGiftRecipients = [];
+
+  if (state.pendingGiftTimer) {
+    window.clearTimeout(state.pendingGiftTimer);
+    state.pendingGiftTimer = 0;
+  }
+
+  for (const item of recipients) {
+    enqueueAlert(buildGiftRecipientAlert(item.recipient, item.gifter));
+  }
+}
+
+function scheduleSyntheticGiftBulk() {
+  if (state.pendingGiftTimer) return;
+
+  state.pendingGiftTimer = window.setTimeout(() => {
+    state.pendingGiftTimer = 0;
+    if (!state.pendingGiftRecipients.length) return;
+
+    const first = state.pendingGiftRecipients[0];
+    const gifter = first.gifter;
+    const count = state.pendingGiftRecipients.length;
+
+    state.giftBulkAt = Date.now();
+    state.giftBulkSender = gifter;
+    state.giftBulkCount = count;
+
+    enqueueAlert(buildGiftBulkAlert(gifter, count));
+    flushPendingGiftRecipients();
+  }, 1200);
+}
+
+function buildAlert(listener, payload) {
+  const username = resolveUsername(payload);
+
+  if (listener === 'follower-latest') {
+    return {
+      type: 'follow',
+      headline: `${username} just followed`
+    };
+  }
+
+  if (listener === 'cheer-latest') {
+    const amount = resolveAmountInt(payload, 100);
+    return {
+      type: 'bits',
+      headline: `${username} cheered ${amount} bits`
+    };
+  }
+
+  if (listener === 'subscriber-gifted-latest') {
+    const amount = resolveAmountInt(payload, 1);
+    state.giftBulkAt = Date.now();
+    state.giftBulkSender = username;
+    state.giftBulkCount = amount;
+    return buildGiftBulkAlert(username, amount);
+  }
+
+  if (
+    listener === 'subscriber-latest' ||
+    listener === 'subscriber-new-latest' ||
+    listener === 'subscriber-resub-latest'
+  ) {
+    if (isGiftDerivedSubscriberEvent(listener, payload)) {
+      const gifter = resolveString(payload, ['sender', 'senderName'], '');
+      const recipient = resolveString(payload, ['gifted', 'name'], '');
+
+      if (!gifter || !recipient) return null;
+
+      const now = Date.now();
+      const bulkIsRecent =
+        state.giftBulkAt &&
+        now - state.giftBulkAt < 12000 &&
+        state.giftBulkSender &&
+        gifter.toLowerCase() === state.giftBulkSender.toLowerCase();
+
+      if (bulkIsRecent) {
+        return buildGiftRecipientAlert(recipient, gifter);
+      }
+
+      state.pendingGiftRecipients.push({ gifter, recipient, at: now });
+      scheduleSyntheticGiftBulk();
+      return null;
+    }
+
+    if (looksPrime(payload)) {
+      return {
+        type: 'prime-sub',
+        headline: `${username} subscribed with Prime`
+      };
+    }
+
+    return {
+      type: 'subscribed',
+      headline: `${username} just subscribed`
+    };
+  }
+
+  if (listener === 'raid-latest') {
+    const amount = resolveAmountInt(payload, 1);
+    return {
+      type: 'raid',
+      headline: `${username} raided with ${amount} viewers`
+    };
+  }
+
+  if (listener === 'hypetrain-latest') {
+    return buildHypeTrainAlert(payload);
+  }
+
+  return null;
+}
+
+function renderAlert(alert) {
+  els.alert.dataset.type = alert.type;
+  els.headline.textContent = alert.headline;
+}
+
+function hideAlert() {
+  els.alert.classList.remove('is-active');
+}
+
+function playNext() {
+  if (state.active) return;
+
+  const next = state.queue.shift();
+  if (!next) return;
+
+  state.active = true;
+  renderAlert(next);
+
+  hideAlert();
+  void els.alert.offsetWidth;
+  els.alert.classList.add('is-active');
+
+  const fadeAt = Math.max(0, state.duration - 350);
+
+  window.setTimeout(() => {
+    hideAlert();
+  }, fadeAt);
+
+  window.setTimeout(() => {
+    state.active = false;
+    playNext();
+  }, state.duration);
+}
+
+function enqueueAlert(alert) {
+  if (!alert) return;
+  state.queue.push(alert);
+  playNext();
+}
+
+function handleIncoming(detail) {
+  const payload = normaliseDetail(detail);
+  const listener = payload.listener;
+
+  window.TeeweeAlertsLastEvent = detail;
+  logDebug('Incoming detail', detail);
+  logDebug('Normalised payload', payload);
+
+  const supported = [
+    'follower-latest',
+    'cheer-latest',
+    'subscriber-latest',
+    'subscriber-new-latest',
+    'subscriber-resub-latest',
+    'subscriber-gifted-latest',
+    'raid-latest',
+    'hypetrain-latest'
+  ];
+
+  if (!listener) return;
+  if (!supported.includes(listener)) return;
+  if (isDuplicateEvent(listener, payload)) {
+    logDebug('Skipped duplicate event', { listener, payload });
+    return;
+  }
+
+  const alert = buildAlert(listener, payload);
+
+  if (!alert) {
+    logDebug('Skipped event after buildAlert', { listener, payload });
+    return;
+  }
+
+  logDebug('Built alert', alert);
+  enqueueAlert(alert);
+
+  if (alert._giftBulk) {
+    flushPendingGiftRecipients();
+  }
+}
+
+window.addEventListener('onWidgetLoad', function (obj) {
+  cacheEls();
+  applyFieldData((obj.detail && obj.detail.fieldData) || {});
+  logDebug('Widget loaded', obj);
+
+  window.TeeweeAlertsTest = function (type) {
+    const samples = {
+      follow: {
+        listener: 'follower-latest',
+        event: { data: { name: 'Bobby' } }
+      },
+      bits: {
+        listener: 'cheer-latest',
+        event: { data: { name: 'Bobby', amount: 500 } }
+      },
+      subscribed: {
+        listener: 'subscriber-latest',
+        event: { data: { name: 'Bobby', amount: 1, tier: '1000' } }
+      },
+      'prime-sub': {
+        listener: 'subscriber-latest',
+        event: { data: { name: 'Bobby', amount: 1, tier: 'prime' } }
+      },
+      'gifted-subs': {
+        listener: 'subscriber-gifted-latest',
+        event: { data: { name: 'Bobby', amount: 5 } }
+      },
+      giftedFromSubLatest: {
+        listener: 'subscriber-latest',
+        event: { data: { name: 'Alice', sender: 'Bobby', gifted: 'Alice', amount: 1, tier: '1000' } }
+      },
+      raid: {
+        listener: 'raid-latest',
+        event: { data: { name: 'Bobby', amount: 123 } }
+      },
+      hypetrainStart: {
+        listener: 'hypetrain-latest',
+        event: { data: { active: true, level: 1, levelChanged: true } }
+      },
+      hypetrainLevelUp: {
+        listener: 'hypetrain-latest',
+        event: { data: { active: true, level: 2, levelChanged: true } }
+      },
+      hypetrainEnd: {
+        listener: 'hypetrain-latest',
+        event: { data: { active: false, level: 2, levelChanged: false } }
+      }
+    };
+
+    if (type === 'giftedTwoRecipients') {
+      handleIncoming({ listener: 'subscriber-latest', event: { data: { name: 'Alice', sender: 'Bobby', gifted: 'Alice', amount: 1, tier: '1000' } } });
+      handleIncoming({ listener: 'subscriber-latest', event: { data: { name: 'Charlie', sender: 'Bobby', gifted: 'Charlie', amount: 1, tier: '1000' } } });
+      return;
+    }
+
+    handleIncoming(samples[type] || samples.follow);
+  };
+});
+
+window.addEventListener('onEventReceived', function (obj) {
+  handleIncoming(obj.detail);
+});
+
+--------------------------------------------
+NOTES / DATA (for reference)
+--------------------------------------------
+
+You included a "DATA" block from your current setup with includeRaids enabled.
+For this widget to receive raids/hype trains, ensure raids are enabled in the overlay/widget settings.
+Hype Train payloads are delivered as events; the most reliable way to confirm the exact shape is:
+- Set Debug Mode = true
+- Trigger a raid and a hype train
+- Inspect window.TeeweeAlertsLastEvent in the widget preview console
+
+Gifted subs can arrive in either form per StreamElements docs:
+- listener "subscriber-gifted-latest" (gifter + amount)
+- listener "subscriber-latest" with fields sender/gifted
+This draft handles both, shows the bulk gifter first, then recipients as:
+"USERNAME received a gifted sub from GIFTER", and suppresses duplicates when both forms arrive.
