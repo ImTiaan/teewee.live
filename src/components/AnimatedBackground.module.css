@@ -9,6 +9,10 @@
     overflow: hidden;
 }
 
+:global(:root) {
+    --teewee-spin-duration: 120s;
+}
+
 .burstWrap {
     position: absolute;
     left: 50%;
@@ -30,9 +34,9 @@
         rgba(5, 63, 51, 0.92) 0deg 10deg,
         transparent 10deg 17deg
     );
-    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 260px, rgba(0, 0, 0, 1) 380px);
-    -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 260px, rgba(0, 0, 0, 1) 380px);
-    animation: spin 120s linear infinite;
+    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 170px, rgba(0, 0, 0, 1) 171px 100%);
+    -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 170px, rgba(0, 0, 0, 1) 171px 100%);
+    animation: spin var(--teewee-spin-duration) linear infinite;
 }
 
 .container::after {
