@@ -1,0 +1,611 @@
+StreamElements Custom Widget – Teewee Sub Goal Tracker (Draft)
+
+This widget is a simple top-right sub milestone tracker:
+- Styled to feel like the follower goal overlay
+- Uses the teewee Block Script font
+- Shows the current sub count and the nearest upcoming goal only
+- Shows the reward text for that current goal
+- Rolls forward automatically as subs increase
+- Seeds from StreamElements subscriber total when available
+- Increments live on new sub / resub / Prime / gifted sub events
+- Persists the current sub count in localStorage as a fallback
+
+Important:
+- The milestone list is editable in the `milestonesJson` field
+- Default goals are included for `50, 60, 70, 80, 90, 100`
+- Replace the placeholder reward text with your real rewards
+
+Paste each block into the matching StreamElements Custom Widget tab:
+- Fields
+- HTML
+- CSS
+- JS
+- Data
+
+--------------------------------------------
+FIELDS
+--------------------------------------------
+
+{
+  "widgetName": {
+    "type": "text",
+    "label": "Widget Name",
+    "value": "Teewee Sub Goal Tracker"
+  },
+  "widgetAuthor": {
+    "type": "text",
+    "label": "Author",
+    "value": "teewee"
+  },
+  "titleText": {
+    "type": "text",
+    "label": "Title Text",
+    "value": "Sub Goal"
+  },
+  "showTitle": {
+    "type": "checkbox",
+    "label": "Show Title",
+    "value": true
+  },
+  "currentSubsFallback": {
+    "type": "number",
+    "label": "Current Subs Fallback",
+    "value": 0,
+    "min": 0,
+    "max": 1000000,
+    "step": 1
+  },
+  "milestonesJson": {
+    "type": "textarea",
+    "label": "Milestones JSON",
+    "value": "[\n  {\"goal\": 35, \"label\": \"Homeless Busker (Colt Wizney)\"},\n  {\"goal\": 50, \"label\": \"Tow Terrorist (Lynn Rayson)\"},\n  {\"goal\": 75, \"label\": \"Drunk stream\"},\n  {\"goal\": 100, \"label\": \"12h stream\"}\n]"
+  },
+  "debugMode": {
+    "type": "checkbox",
+    "label": "Debug Mode",
+    "value": false
+  },
+  "accentColour": {
+    "type": "colorpicker",
+    "label": "Accent Colour",
+    "value": "#1BAA7D"
+  },
+  "textColour": {
+    "type": "colorpicker",
+    "label": "Text Colour",
+    "value": "#F6F8F7"
+  },
+  "rewardColour": {
+    "type": "colorpicker",
+    "label": "Reward Colour",
+    "value": "#E8EEEB"
+  }
+}
+
+--------------------------------------------
+HTML
+--------------------------------------------
+
+<div id="goal-root" class="goal-root">
+  <div class="goal-shell">
+    <div id="goal-title" class="goal-title">Sub Goal</div>
+    <div class="goal-row">
+      <span id="current-count" class="goal-count">0</span>
+      <span class="goal-separator">/</span>
+      <span id="goal-count" class="goal-goal">35</span>
+    </div>
+    <div id="reward-text" class="reward-text">Homeless Busker (Colt Wizney)</div>
+  </div>
+</div>
+
+--------------------------------------------
+CSS
+--------------------------------------------
+
+@font-face {
+  font-family: 'Block Script';
+  src: url('https://www.teewee.live/screens/assets/Block%20Script.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --goal-accent: #1baa7d;
+  --goal-text: #f6f8f7;
+  --goal-reward: #e8eeeb;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.goal-root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.goal-shell {
+  position: absolute;
+  left: auto;
+  right: 36px;
+  top: 28px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  max-width: min(420px, calc(100vw - 72px));
+  text-align: right;
+}
+
+.goal-title {
+  color: var(--goal-text);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.12),
+    0 2px 0 rgba(7, 31, 26, 0.44),
+    0 0 10px rgba(0, 0, 0, 0.18);
+}
+
+.goal-row {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+.goal-count,
+.goal-goal,
+.goal-separator {
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.14),
+    0 1px 0 rgba(7, 31, 26, 0.28),
+    0 0 10px rgba(0, 0, 0, 0.16);
+}
+
+.goal-count,
+.goal-separator {
+  color: var(--goal-text);
+}
+
+.goal-goal {
+  color: var(--goal-accent);
+}
+
+.goal-count,
+.goal-goal {
+  font-size: clamp(34px, 3vw, 52px);
+}
+
+.goal-separator {
+  font-size: clamp(28px, 2.2vw, 42px);
+}
+
+.reward-text {
+  color: var(--goal-reward);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  max-width: 100%;
+  text-align: right;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.12),
+    0 2px 0 rgba(7, 31, 26, 0.22),
+    0 0 8px rgba(0, 0, 0, 0.14);
+}
+
+--------------------------------------------
+JS
+--------------------------------------------
+
+const STORAGE_KEY = 'teewee_sub_goal_tracker_v1';
+
+const state = {
+  debugMode: false,
+  currentSubs: 0,
+  titleText: 'Sub Goal',
+  showTitle: true,
+  milestones: [],
+  fingerprints: new Map(),
+  lastBulkGift: {
+    at: 0,
+    sender: '',
+    amount: 0
+  }
+};
+
+const els = {};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function cacheEls() {
+  els.currentCount = $('current-count');
+  els.goalCount = $('goal-count');
+  els.goalTitle = $('goal-title');
+  els.rewardText = $('reward-text');
+}
+
+function logDebug(label, value) {
+  if (!state.debugMode) return;
+  console.log('[Teewee Sub Goal]', label, value);
+}
+
+function setCssVar(name, value) {
+  if (!value) return;
+  document.documentElement.style.setProperty(name, value);
+}
+
+function saveCurrentSubs() {
+  try {
+    localStorage.setItem(STORAGE_KEY, String(state.currentSubs));
+  } catch (error) {
+    logDebug('saveCurrentSubs failed', error);
+  }
+}
+
+function loadCurrentSubs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return null;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : null;
+  } catch (error) {
+    logDebug('loadCurrentSubs failed', error);
+    return null;
+  }
+}
+
+function parseMilestones(raw) {
+  try {
+    const parsed = Array.isArray(raw) ? raw : JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((item) => ({
+        goal: Math.floor(Number(item && item.goal)),
+        label: item && typeof item.label === 'string' ? item.label.trim() : ''
+      }))
+      .filter((item) => Number.isFinite(item.goal) && item.goal > 0 && item.label)
+      .sort((a, b) => a.goal - b.goal);
+  } catch (error) {
+    logDebug('parseMilestones failed', error);
+    return [];
+  }
+}
+
+function getActiveMilestone() {
+  if (!state.milestones.length) {
+    return {
+      goal: state.currentSubs,
+      label: 'Add milestones in the field settings'
+    };
+  }
+
+  const next = state.milestones.find((item) => item.goal > state.currentSubs);
+  if (next) return next;
+
+  const last = state.milestones[state.milestones.length - 1];
+  return {
+    goal: last.goal,
+    label: 'All listed goals complete'
+  };
+}
+
+function render() {
+  const active = getActiveMilestone();
+  els.currentCount.textContent = String(state.currentSubs);
+  els.goalCount.textContent = String(active.goal);
+  els.rewardText.textContent = active.label;
+  els.goalTitle.textContent = state.titleText;
+  els.goalTitle.style.display = state.showTitle ? 'block' : 'none';
+}
+
+function cleanupFingerprints() {
+  const now = Date.now();
+  for (const [key, timestamp] of state.fingerprints.entries()) {
+    if (now - timestamp > 8000) {
+      state.fingerprints.delete(key);
+    }
+  }
+}
+
+function normaliseDetail(detail) {
+  const event = detail && typeof detail.event === 'object' ? detail.event : {};
+  const eventData = event && typeof event.data === 'object' ? event.data : {};
+
+  return {
+    listener: detail && detail.listener ? detail.listener : '',
+    event,
+    data: {
+      ...(detail || {}),
+      ...(event || {}),
+      ...(eventData || {})
+    }
+  };
+}
+
+function buildFingerprint(listener, payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  return [
+    listener,
+    data._id,
+    data.id,
+    data.name,
+    data.username,
+    data.sender,
+    data.gifted,
+    data.amount,
+    data.createdAt,
+    event._id,
+    event.id
+  ].filter(Boolean).join('|');
+}
+
+function isDuplicateEvent(listener, payload) {
+  cleanupFingerprints();
+
+  const fingerprint = buildFingerprint(listener, payload);
+  if (!fingerprint) return false;
+
+  const now = Date.now();
+  const previous = state.fingerprints.get(fingerprint);
+  state.fingerprints.set(fingerprint, now);
+
+  return Boolean(previous && now - previous < 3000);
+}
+
+function safeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function resolveNumber(payload, keys, fallback = 0) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
+}
+
+function resolveUsername(payload, fallback = 'Someone') {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+  const candidates = [
+    data.name,
+    data.username,
+    data.displayName,
+    data.display_name,
+    data.userName,
+    data.senderName,
+    event.name,
+    event.username,
+    event.displayName,
+    event.display_name
+  ];
+
+  for (const candidate of candidates) {
+    const text = safeText(candidate);
+    if (text) return text;
+  }
+
+  return fallback;
+}
+
+function readSubscriberTotal(sessionData) {
+  if (!sessionData || typeof sessionData !== 'object') return null;
+
+  const subscriberTotal = sessionData['subscriber-total'];
+  const subscriberSession = sessionData['subscriber-session'];
+
+  if (subscriberTotal && Number.isFinite(Number(subscriberTotal.count))) {
+    return Math.max(0, Math.floor(Number(subscriberTotal.count)));
+  }
+
+  if (subscriberTotal && Number.isFinite(Number(subscriberTotal.amount))) {
+    return Math.max(0, Math.floor(Number(subscriberTotal.amount)));
+  }
+
+  if (subscriberSession && Number.isFinite(Number(subscriberSession.count))) {
+    return Math.max(0, Math.floor(Number(subscriberSession.count)));
+  }
+
+  return null;
+}
+
+function seedCurrentSubs(detail) {
+  const sessionCount = readSubscriberTotal(detail && detail.session ? detail.session.data : null);
+  const storedCount = loadCurrentSubs();
+  const fallbackCount = Math.max(0, Math.floor(Number(detail && detail.fieldData && detail.fieldData.currentSubsFallback) || 0));
+
+  const seeded = [sessionCount, storedCount, fallbackCount]
+    .filter((value) => Number.isFinite(value))
+    .map((value) => Math.floor(value))[0];
+
+  state.currentSubs = Number.isFinite(seeded) ? seeded : 0;
+  saveCurrentSubs();
+}
+
+function addSubs(count) {
+  const increment = Math.max(0, Math.floor(Number(count) || 0));
+  if (!increment) return;
+  state.currentSubs += increment;
+  saveCurrentSubs();
+  render();
+}
+
+function handleGiftBulk(payload) {
+  const gifter = resolveUsername(payload);
+  const amount = Math.max(1, Math.floor(resolveNumber(payload, ['count', 'amount'], 1)));
+
+  state.lastBulkGift = {
+    at: Date.now(),
+    sender: gifter.toLowerCase(),
+    amount
+  };
+
+  addSubs(amount);
+}
+
+function isGiftRecipientEcho(payload) {
+  const sender = safeText((payload.data && payload.data.sender) || (payload.event && payload.event.sender)).toLowerCase();
+  if (!sender) return false;
+  const recent = state.lastBulkGift;
+  return Boolean(recent.sender && sender === recent.sender && Date.now() - recent.at < 8000);
+}
+
+function handleIncoming(detail) {
+  const payload = normaliseDetail(detail);
+  const listener = payload.listener;
+
+  window.TeeweeSubGoalLastEvent = detail;
+  logDebug('Incoming detail', detail);
+
+  if (!listener) return;
+
+  const supported = [
+    'subscriber-latest',
+    'subscriber-new-latest',
+    'subscriber-resub-latest',
+    'subscriber-gifted-latest'
+  ];
+
+  if (!supported.includes(listener)) return;
+  if (isDuplicateEvent(listener, payload)) return;
+
+  if (listener === 'subscriber-gifted-latest') {
+    handleGiftBulk(payload);
+    return;
+  }
+
+  if (
+    listener === 'subscriber-latest' ||
+    listener === 'subscriber-new-latest' ||
+    listener === 'subscriber-resub-latest'
+  ) {
+    const data = payload.data || {};
+    const isGiftDerived = Boolean(
+      data.sender ||
+      data.gifted ||
+      data.isGift ||
+      data.isGifted ||
+      data.bulkGifted
+    );
+
+    if (isGiftDerived && isGiftRecipientEcho(payload)) {
+      logDebug('Skipped gift recipient echo', payload);
+      return;
+    }
+
+    if (isGiftDerived) {
+      addSubs(1);
+      return;
+    }
+
+    addSubs(1);
+  }
+}
+
+function syncFromSessionUpdate(detail) {
+  const payload = normaliseDetail(detail);
+  const data = payload.data || {};
+
+  if (payload.listener) {
+    handleIncoming(detail);
+    return;
+  }
+
+  if (Number.isFinite(Number(data.count))) {
+    const count = Math.max(0, Math.floor(Number(data.count)));
+    if (count > state.currentSubs) {
+      state.currentSubs = count;
+      saveCurrentSubs();
+      render();
+    }
+  }
+}
+
+function applyFieldData(fieldData) {
+  state.debugMode = Boolean(fieldData.debugMode);
+  state.titleText = typeof fieldData.titleText === 'string' && fieldData.titleText.trim()
+    ? fieldData.titleText.trim()
+    : 'Sub Goal';
+  state.showTitle = Boolean(fieldData.showTitle);
+  state.milestones = parseMilestones(fieldData.milestonesJson || '[]');
+
+  setCssVar('--goal-accent', fieldData.accentColour || '#1BAA7D');
+  setCssVar('--goal-text', fieldData.textColour || '#F6F8F7');
+  setCssVar('--goal-reward', fieldData.rewardColour || '#E8EEEB');
+}
+
+window.addEventListener('onWidgetLoad', function (obj) {
+  cacheEls();
+  applyFieldData((obj.detail && obj.detail.fieldData) || {});
+  seedCurrentSubs(obj.detail || {});
+  render();
+
+  window.TeeweeSubGoalState = state;
+  window.TeeweeSubGoalSet = function (count) {
+    const parsed = Number(count);
+    if (!Number.isFinite(parsed) || parsed < 0) return;
+    state.currentSubs = Math.floor(parsed);
+    saveCurrentSubs();
+    render();
+  };
+});
+
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleIncoming(obj.detail);
+});
+
+window.addEventListener('onSessionUpdate', function (obj) {
+  if (!obj || !obj.detail) return;
+  syncFromSessionUpdate(obj.detail);
+});
+
+--------------------------------------------
+DATA
+--------------------------------------------
+
+{
+  "eventsLimit": 5,
+  "includeSubs": "yes",
+  "widgetName": "Teewee Sub Goal Tracker",
+  "widgetAuthor": "teewee",
+  "titleText": "Sub Goal",
+  "showTitle": true,
+  "currentSubsFallback": 0,
+  "milestonesJson": "[\n  {\"goal\": 35, \"label\": \"Homeless Busker (Colt Wizney)\"},\n  {\"goal\": 50, \"label\": \"Tow Terrorist (Lynn Rayson)\"},\n  {\"goal\": 75, \"label\": \"Drunk stream\"},\n  {\"goal\": 100, \"label\": \"12h stream\"}\n]",
+  "debugMode": false,
+  "accentColour": "#1BAA7D",
+  "textColour": "#F6F8F7",
+  "rewardColour": "#E8EEEB"
+}

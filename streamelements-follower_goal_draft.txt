@@ -1,0 +1,417 @@
+StreamElements Custom Widget – Teewee Follower Goal (Draft)
+
+This widget is a simple top-left follower goal:
+- Uses the teewee Block Script font
+- Shows current followers and goal as "current / goal"
+- Defaults goal to 500
+- Seeds from StreamElements session follower total when available
+- Increments live when a new follower event arrives
+- Persists the current count in localStorage as a fallback
+
+Paste each block into the matching StreamElements Custom Widget tab:
+- Fields
+- HTML
+- CSS
+- JS
+- Data
+
+--------------------------------------------
+FIELDS
+--------------------------------------------
+
+{
+  "widgetName": {
+    "type": "text",
+    "label": "Widget Name",
+    "value": "Teewee Follower Goal"
+  },
+  "widgetAuthor": {
+    "type": "text",
+    "label": "Author",
+    "value": "teewee"
+  },
+  "goalFollowers": {
+    "type": "number",
+    "label": "Goal Followers",
+    "value": 500,
+    "min": 1,
+    "max": 1000000,
+    "step": 1
+  },
+  "currentFollowersFallback": {
+    "type": "number",
+    "label": "Current Followers Fallback",
+    "value": 0,
+    "min": 0,
+    "max": 1000000,
+    "step": 1
+  },
+  "titleText": {
+    "type": "text",
+    "label": "Title Text",
+    "value": "Follower Goal"
+  },
+  "showTitle": {
+    "type": "checkbox",
+    "label": "Show Title",
+    "value": true
+  },
+  "debugMode": {
+    "type": "checkbox",
+    "label": "Debug Mode",
+    "value": false
+  },
+  "accentColour": {
+    "type": "colorpicker",
+    "label": "Accent Colour",
+    "value": "#1BAA7D"
+  },
+  "textColour": {
+    "type": "colorpicker",
+    "label": "Text Colour",
+    "value": "#F6F8F7"
+  }
+}
+
+--------------------------------------------
+HTML
+--------------------------------------------
+
+<div id="goal-root" class="goal-root">
+  <div class="goal-shell">
+    <div id="goal-title" class="goal-title">Follower Goal</div>
+    <div class="goal-row">
+      <span id="current-count" class="goal-count">0</span>
+      <span class="goal-separator">/</span>
+      <span id="goal-count" class="goal-goal">500</span>
+    </div>
+  </div>
+</div>
+
+--------------------------------------------
+CSS
+--------------------------------------------
+
+@font-face {
+  font-family: 'Block Script';
+  src: url('https://www.teewee.live/screens/assets/Block%20Script.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --goal-accent: #1baa7d;
+  --goal-text: #f6f8f7;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.goal-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.goal-shell {
+  position: absolute;
+  left: 36px;
+  top: 28px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.goal-title {
+  color: var(--goal-text);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.12),
+    0 2px 0 rgba(7, 31, 26, 0.44),
+    0 0 10px rgba(0, 0, 0, 0.18);
+}
+
+.goal-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.goal-count,
+.goal-goal,
+.goal-separator {
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.18),
+    0 4px 0 rgba(7, 31, 26, 0.5),
+    0 0 18px rgba(0, 0, 0, 0.22);
+}
+
+.goal-count,
+.goal-separator {
+  color: var(--goal-text);
+}
+
+.goal-goal {
+  color: var(--goal-accent);
+}
+
+.goal-count,
+.goal-goal {
+  font-size: clamp(34px, 3vw, 52px);
+}
+
+.goal-separator {
+  font-size: clamp(28px, 2.2vw, 42px);
+}
+
+--------------------------------------------
+JS
+--------------------------------------------
+
+const STORAGE_KEY = 'teewee_follower_goal_v1';
+
+const state = {
+  debugMode: false,
+  currentFollowers: 0,
+  goalFollowers: 500,
+  titleText: 'Follower Goal',
+  showTitle: true,
+  fingerprints: new Map()
+};
+
+const els = {};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function cacheEls() {
+  els.currentCount = $('current-count');
+  els.goalCount = $('goal-count');
+  els.goalTitle = $('goal-title');
+}
+
+function logDebug(label, value) {
+  if (!state.debugMode) return;
+  console.log('[Teewee Follower Goal]', label, value);
+}
+
+function setCssVar(name, value) {
+  if (!value) return;
+  document.documentElement.style.setProperty(name, value);
+}
+
+function saveCurrentFollowers() {
+  try {
+    localStorage.setItem(STORAGE_KEY, String(state.currentFollowers));
+  } catch (error) {
+    logDebug('saveCurrentFollowers failed', error);
+  }
+}
+
+function loadCurrentFollowers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return null;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : null;
+  } catch (error) {
+    logDebug('loadCurrentFollowers failed', error);
+    return null;
+  }
+}
+
+function render() {
+  els.currentCount.textContent = String(state.currentFollowers);
+  els.goalCount.textContent = String(state.goalFollowers);
+  els.goalTitle.textContent = state.titleText;
+  els.goalTitle.style.display = state.showTitle ? 'block' : 'none';
+}
+
+function cleanupFingerprints() {
+  const now = Date.now();
+  for (const [key, timestamp] of state.fingerprints.entries()) {
+    if (now - timestamp > 8000) {
+      state.fingerprints.delete(key);
+    }
+  }
+}
+
+function normaliseDetail(detail) {
+  const event = detail && typeof detail.event === 'object' ? detail.event : {};
+  const eventData = event && typeof event.data === 'object' ? event.data : {};
+
+  return {
+    listener: detail && detail.listener ? detail.listener : '',
+    event,
+    data: {
+      ...(detail || {}),
+      ...(event || {}),
+      ...(eventData || {})
+    }
+  };
+}
+
+function buildFingerprint(listener, payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  return [
+    listener,
+    data._id,
+    data.id,
+    data.name,
+    data.username,
+    data.createdAt,
+    event._id,
+    event.id
+  ].filter(Boolean).join('|');
+}
+
+function isDuplicateEvent(listener, payload) {
+  cleanupFingerprints();
+
+  const fingerprint = buildFingerprint(listener, payload);
+  if (!fingerprint) return false;
+
+  const now = Date.now();
+  const previous = state.fingerprints.get(fingerprint);
+  state.fingerprints.set(fingerprint, now);
+
+  return Boolean(previous && now - previous < 3000);
+}
+
+function readFollowerTotal(sessionData) {
+  if (!sessionData || typeof sessionData !== 'object') return null;
+
+  const followerTotal = sessionData['follower-total'];
+  const followerLatest = sessionData['follower-latest'];
+
+  if (followerTotal && Number.isFinite(Number(followerTotal.count))) {
+    return Math.max(0, Math.floor(Number(followerTotal.count)));
+  }
+
+  if (followerTotal && Number.isFinite(Number(followerTotal.amount))) {
+    return Math.max(0, Math.floor(Number(followerTotal.amount)));
+  }
+
+  if (followerLatest && Number.isFinite(Number(followerLatest.count))) {
+    return Math.max(0, Math.floor(Number(followerLatest.count)));
+  }
+
+  return null;
+}
+
+function applyFieldData(fieldData) {
+  state.debugMode = Boolean(fieldData.debugMode);
+  state.goalFollowers = Math.max(1, Math.floor(Number(fieldData.goalFollowers) || 500));
+  state.titleText = typeof fieldData.titleText === 'string' && fieldData.titleText.trim()
+    ? fieldData.titleText.trim()
+    : 'Follower Goal';
+  state.showTitle = Boolean(fieldData.showTitle);
+
+  setCssVar('--goal-accent', fieldData.accentColour || '#1BAA7D');
+  setCssVar('--goal-text', fieldData.textColour || '#F6F8F7');
+}
+
+function seedCurrentFollowers(detail) {
+  const sessionCount = readFollowerTotal(detail && detail.session ? detail.session.data : null);
+  const storedCount = loadCurrentFollowers();
+  const fallbackCount = Math.max(0, Math.floor(Number(detail && detail.fieldData && detail.fieldData.currentFollowersFallback) || 0));
+
+  const seeded = [sessionCount, storedCount, fallbackCount]
+    .filter((value) => Number.isFinite(value))
+    .map((value) => Math.floor(value))[0];
+
+  state.currentFollowers = Number.isFinite(seeded) ? seeded : 0;
+  saveCurrentFollowers();
+}
+
+function handleFollowerEvent(detail) {
+  const payload = normaliseDetail(detail);
+  const listener = payload.listener;
+  if (listener !== 'follower-latest') return;
+  if (isDuplicateEvent(listener, payload)) return;
+
+  state.currentFollowers += 1;
+  saveCurrentFollowers();
+  render();
+}
+
+function syncFromSessionUpdate(detail) {
+  const payload = normaliseDetail(detail);
+  const data = payload.data || {};
+
+  if (payload.listener === 'follower-latest') {
+    handleFollowerEvent(detail);
+    return;
+  }
+
+  if (Number.isFinite(Number(data.count))) {
+    const count = Math.max(0, Math.floor(Number(data.count)));
+    if (count > state.currentFollowers) {
+      state.currentFollowers = count;
+      saveCurrentFollowers();
+      render();
+    }
+  }
+}
+
+window.addEventListener('onWidgetLoad', function (obj) {
+  cacheEls();
+  applyFieldData((obj.detail && obj.detail.fieldData) || {});
+  seedCurrentFollowers(obj.detail || {});
+  render();
+
+  window.TeeweeFollowerGoalState = state;
+  window.TeeweeFollowerGoalSet = function (count) {
+    const parsed = Number(count);
+    if (!Number.isFinite(parsed) || parsed < 0) return;
+    state.currentFollowers = Math.floor(parsed);
+    saveCurrentFollowers();
+    render();
+  };
+});
+
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleFollowerEvent(obj.detail);
+});
+
+window.addEventListener('onSessionUpdate', function (obj) {
+  if (!obj || !obj.detail) return;
+  syncFromSessionUpdate(obj.detail);
+});
+
+--------------------------------------------
+DATA
+--------------------------------------------
+
+{
+  "eventsLimit": 5,
+  "includeFollowers": "yes",
+  "widgetName": "Teewee Follower Goal",
+  "widgetAuthor": "teewee",
+  "goalFollowers": 500,
+  "currentFollowersFallback": 0,
+  "titleText": "Follower Goal",
+  "showTitle": true,
+  "debugMode": false,
+  "accentColour": "#1BAA7D",
+  "textColour": "#F6F8F7"
+}

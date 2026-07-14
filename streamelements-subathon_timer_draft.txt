@@ -1,0 +1,985 @@
+StreamElements Custom Widget – Teewee Long Stream Timer (Draft)
+
+This widget is designed as a bottom-centre timer rail for a long stream / subathon-style session.
+It matches the existing teewee overlay language:
+- Dark transparent broadcast overlay
+- Deep green / emerald brand palette
+- Block Script for the hero timer
+- Clean lower-third layout with rules panel
+- Event-coloured add-time feedback
+
+Behaviour locked in from our discussion:
+- Starts at 6 hours
+- Counts down continuously
+- Shows negative time after zero (overtime)
+- Follow = +10 minutes
+- Subscribed = +20 minutes
+- Prime sub = +20 minutes
+- Gifted subs = +20 minutes per gifted sub, counting the bulk gifter event only
+- 100 bits = +5 minutes per full 100 bits
+- Uses localStorage persistence so a refresh does not wipe the timer
+
+Paste each block into the matching StreamElements Custom Widget tab:
+- Fields
+- HTML
+- CSS
+- JS
+- Data
+
+--------------------------------------------
+FIELDS
+--------------------------------------------
+
+{
+  "widgetName": {
+    "type": "text",
+    "label": "Widget Name",
+    "value": "Teewee Long Stream Timer"
+  },
+  "widgetAuthor": {
+    "type": "text",
+    "label": "Author",
+    "value": "teewee"
+  },
+  "startingHours": {
+    "type": "number",
+    "label": "Starting Hours",
+    "value": 6,
+    "min": 1,
+    "max": 48,
+    "step": 1
+  },
+  "followMinutes": {
+    "type": "number",
+    "label": "Follow Minutes",
+    "value": 10,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "subMinutes": {
+    "type": "number",
+    "label": "Sub Minutes",
+    "value": 20,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "giftSubMinutes": {
+    "type": "number",
+    "label": "Gifted Sub Minutes",
+    "value": 20,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "bitsStep": {
+    "type": "number",
+    "label": "Bits Step",
+    "value": 100,
+    "min": 1,
+    "max": 10000,
+    "step": 1
+  },
+  "bitsStepMinutes": {
+    "type": "number",
+    "label": "Minutes Per Bits Step",
+    "value": 5,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "showAdmin": {
+    "type": "checkbox",
+    "label": "Show Admin Controls",
+    "value": false
+  },
+  "debugMode": {
+    "type": "checkbox",
+    "label": "Debug Mode",
+    "value": false
+  },
+  "followColour": {
+    "type": "colorpicker",
+    "label": "Colour: Follow",
+    "value": "#053F33"
+  },
+  "subscribedColour": {
+    "type": "colorpicker",
+    "label": "Colour: Subscribed",
+    "value": "#04473C"
+  },
+  "primeSubColour": {
+    "type": "colorpicker",
+    "label": "Colour: Prime Sub",
+    "value": "#00A8E1"
+  },
+  "giftedSubsColour": {
+    "type": "colorpicker",
+    "label": "Colour: Gifted Subs",
+    "value": "#2ED9B0"
+  },
+  "bitsColour": {
+    "type": "colorpicker",
+    "label": "Colour: Bits",
+    "value": "#F5B301"
+  }
+}
+
+--------------------------------------------
+HTML
+--------------------------------------------
+
+<div id="timer-root" class="timer-root">
+  <div id="event-pop" class="event-pop" data-type="follow" aria-live="polite"></div>
+
+  <div class="timer-shell">
+    <div class="pill-stack pill-stack-left">
+      <div id="rule-follow" class="rule-pill" data-type="follow">
+        <span class="rule-name">Follow</span>
+        <span id="rule-follow-value" class="rule-value">+10m</span>
+      </div>
+      <div id="rule-sub" class="rule-pill" data-type="subscribed">
+        <span class="rule-name">Sub / Prime</span>
+        <span id="rule-sub-value" class="rule-value">+20m</span>
+      </div>
+    </div>
+
+    <div class="centre-stack">
+      <div class="rail-wrap">
+        <div class="timer-chip">
+          <span id="timer-sign" class="timer-sign" aria-hidden="true"></span>
+          <span id="timer-display" class="timer-display">06:00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pill-stack pill-stack-right">
+      <div id="rule-gift" class="rule-pill" data-type="gifted-subs">
+        <span class="rule-name">Gifted</span>
+        <span id="rule-gift-value" class="rule-value">+20m each</span>
+      </div>
+      <div id="rule-bits" class="rule-pill" data-type="bits">
+        <span class="rule-name">100 Bits</span>
+        <span id="rule-bits-value" class="rule-value">+5m</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-controls" class="admin-controls" hidden>
+    <button type="button" data-action="plus-follow">+ Follow</button>
+    <button type="button" data-action="plus-sub">+ Sub</button>
+    <button type="button" data-action="plus-gift">+ Gifted</button>
+    <button type="button" data-action="plus-bits">+ 100 Bits</button>
+    <button type="button" data-action="reset">Reset 6h</button>
+  </div>
+</div>
+
+--------------------------------------------
+CSS
+--------------------------------------------
+
+@font-face {
+  font-family: 'Block Script';
+  src: url('https://www.teewee.live/screens/assets/Block%20Script.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --bg-dark: rgba(4, 8, 6, 0.82);
+  --card-dark: rgba(12, 45, 36, 0.84);
+  --line-dark: #053f33;
+  --line-bright: #1baa7d;
+  --text-main: #f6f8f7;
+  --text-soft: rgba(232, 238, 235, 0.78);
+
+  --follow-colour: #053f33;
+  --subscribed-colour: #04473c;
+  --prime-sub-colour: #00a8e1;
+  --gifted-subs-colour: #2ed9b0;
+  --bits-colour: #f5b301;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.timer-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.timer-shell {
+  position: absolute;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: max-content max-content max-content;
+  gap: 4px;
+  align-items: center;
+  width: auto;
+  max-width: calc(100vw - 40px);
+}
+
+.pill-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pill-stack-left {
+  justify-self: end;
+}
+
+.pill-stack-right {
+  justify-self: start;
+}
+
+.centre-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.rail-wrap {
+  position: relative;
+  width: auto;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 18px 6px;
+  min-width: 300px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%),
+    rgba(4, 8, 6, 0.92);
+  box-shadow:
+    0 22px 46px rgba(0, 0, 0, 0.36),
+    0 0 28px rgba(27, 170, 125, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.timer-sign {
+  min-width: 12px;
+  color: rgba(246, 248, 247, 0.92);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+}
+
+.timer-display {
+  display: inline-block;
+  min-width: 220px;
+  color: var(--text-main);
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-size: clamp(36px, 3.8vw, 59px);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.18),
+    0 5px 0 rgba(7, 31, 26, 0.58),
+    0 0 24px rgba(0, 0, 0, 0.26);
+}
+
+.rule-pill {
+  min-width: 168px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 10px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 100%),
+    rgba(4, 8, 6, 0.72);
+  color: var(--text-main);
+  transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+}
+
+.rule-pill.is-hit {
+  transform: scale(1.02);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.08);
+}
+
+.rule-name,
+.rule-value {
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-size: clamp(15px, 1.5vw, 21px);
+  font-weight: 400;
+  line-height: 0.92;
+  white-space: nowrap;
+}
+
+.rule-value {
+  color: var(--gifted-subs-colour);
+}
+
+.event-pop {
+  position: absolute;
+  left: 50%;
+  bottom: 132px;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  color: var(--text-main);
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-size: clamp(24px, 2.7vw, 40px);
+  line-height: 0.94;
+  text-align: center;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.18),
+    0 4px 0 rgba(7, 31, 26, 0.5),
+    0 0 22px rgba(0, 0, 0, 0.24);
+}
+
+.event-pop.is-visible {
+  animation: eventPop 2400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.admin-controls {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  pointer-events: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: min(540px, calc(100vw - 48px));
+}
+
+.admin-controls[hidden] {
+  display: none;
+}
+
+.admin-controls button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(4, 8, 6, 0.92);
+  color: var(--text-main);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font: 600 13px/1 'Segoe UI', sans-serif;
+  cursor: pointer;
+}
+
+@keyframes eventPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 16px) scale(0.92);
+  }
+  16% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -8px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -26px) scale(0.98);
+  }
+}
+
+@media (max-width: 1280px) {
+  .timer-shell {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: min(760px, calc(100vw - 40px));
+    max-width: none;
+  }
+
+  .pill-stack {
+    width: 100%;
+    justify-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .centre-stack {
+    order: 1;
+  }
+
+  .pill-stack-left,
+  .pill-stack-right {
+    order: 2;
+  }
+
+  .rule-pill {
+    min-width: 0;
+  }
+
+  .event-pop {
+    bottom: 166px;
+  }
+}
+
+--------------------------------------------
+JS
+--------------------------------------------
+
+const STORAGE_KEY = 'teewee_long_stream_timer_v1';
+
+const state = {
+  fieldData: {},
+  debugMode: false,
+  startingHours: 6,
+  followMinutes: 10,
+  subMinutes: 20,
+  giftSubMinutes: 20,
+  bitsStep: 100,
+  bitsStepMinutes: 5,
+  startedDurationMs: 6 * 60 * 60 * 1000,
+  targetAt: 0,
+  popTimer: 0,
+  ruleTimers: new Map(),
+  fingerprints: new Map(),
+  lastBulkGift: {
+    at: 0,
+    sender: '',
+    amount: 0
+  }
+};
+
+const els = {};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function cacheEls() {
+  els.root = $('timer-root');
+  els.timerDisplay = $('timer-display');
+  els.timerSign = $('timer-sign');
+  els.eventPop = $('event-pop');
+  els.adminControls = $('admin-controls');
+  els.ruleFollow = $('rule-follow');
+  els.ruleSub = $('rule-sub');
+  els.ruleGift = $('rule-gift');
+  els.ruleBits = $('rule-bits');
+  els.ruleFollowValue = $('rule-follow-value');
+  els.ruleSubValue = $('rule-sub-value');
+  els.ruleGiftValue = $('rule-gift-value');
+  els.ruleBitsValue = $('rule-bits-value');
+}
+
+function logDebug(label, value) {
+  if (!state.debugMode) return;
+  console.log('[Teewee Timer]', label, value);
+}
+
+function setCssVar(name, value) {
+  if (!value) return;
+  document.documentElement.style.setProperty(name, value);
+}
+
+function formatClock(ms) {
+  const totalSeconds = Math.floor(Math.abs(ms) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
+}
+
+function minutesToMs(minutes) {
+  return Math.max(0, Number(minutes) || 0) * 60 * 1000;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      targetAt: state.targetAt,
+      startedDurationMs: state.startedDurationMs
+    }));
+  } catch (error) {
+    logDebug('saveState failed', error);
+  }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return false;
+    if (!Number.isFinite(parsed.targetAt)) return false;
+    state.targetAt = parsed.targetAt;
+    if (Number.isFinite(parsed.startedDurationMs)) {
+      state.startedDurationMs = parsed.startedDurationMs;
+    }
+    return true;
+  } catch (error) {
+    logDebug('loadState failed', error);
+    return false;
+  }
+}
+
+function resetTimer() {
+  state.startedDurationMs = state.startingHours * 60 * 60 * 1000;
+  state.targetAt = Date.now() + state.startedDurationMs;
+  saveState();
+  renderTimer();
+}
+
+function ensureTimer() {
+  if (loadState()) {
+    renderTimer();
+    return;
+  }
+  resetTimer();
+}
+
+function renderTimer() {
+  const remainingMs = state.targetAt - Date.now();
+  els.timerSign.textContent = remainingMs < 0 ? '-' : '';
+  els.timerDisplay.textContent = formatClock(remainingMs);
+}
+
+function tick() {
+  renderTimer();
+  window.requestAnimationFrame(() => {
+    window.setTimeout(tick, 250);
+  });
+}
+
+function cleanupFingerprints() {
+  const now = Date.now();
+  for (const [key, timestamp] of state.fingerprints.entries()) {
+    if (now - timestamp > 8000) {
+      state.fingerprints.delete(key);
+    }
+  }
+}
+
+function buildFingerprint(listener, payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  return [
+    listener,
+    data._id,
+    data.id,
+    data.name,
+    data.username,
+    data.sender,
+    data.gifted,
+    data.amount,
+    data.createdAt,
+    event._id,
+    event.id
+  ].filter(Boolean).join('|');
+}
+
+function isDuplicateEvent(listener, payload) {
+  cleanupFingerprints();
+
+  const fingerprint = buildFingerprint(listener, payload);
+  if (!fingerprint) return false;
+
+  const now = Date.now();
+  const previous = state.fingerprints.get(fingerprint);
+  state.fingerprints.set(fingerprint, now);
+
+  return Boolean(previous && now - previous < 3000);
+}
+
+function normaliseDetail(detail) {
+  const event = detail && typeof detail.event === 'object' ? detail.event : {};
+  const eventData = event && typeof event.data === 'object' ? event.data : {};
+
+  return {
+    listener: detail && detail.listener ? detail.listener : '',
+    type: detail && detail.type ? detail.type : '',
+    event,
+    data: {
+      ...(detail || {}),
+      ...(event || {}),
+      ...(eventData || {})
+    }
+  };
+}
+
+function safeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function resolveUsername(payload, fallback = 'Someone') {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+  const candidates = [
+    data.name,
+    data.username,
+    data.displayName,
+    data.display_name,
+    data.userName,
+    data.senderName,
+    event.name,
+    event.username,
+    event.displayName,
+    event.display_name
+  ];
+
+  for (const candidate of candidates) {
+    const text = safeText(candidate);
+    if (text) return text;
+  }
+
+  return fallback;
+}
+
+function resolveNumber(payload, keys, fallback = 0) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
+}
+
+function looksPrime(payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+  const candidates = [
+    data.isPrime,
+    data.prime,
+    data.plan,
+    data.planName,
+    data.subPlan,
+    data.subscriptionPlan,
+    data.tier,
+    data.message,
+    event.isPrime,
+    event.prime,
+    event.plan,
+    event.planName,
+    event.subPlan,
+    event.subscriptionPlan,
+    event.tier,
+    event.message
+  ];
+
+  return candidates.some((value) => {
+    if (value === true) return true;
+    if (typeof value !== 'string' && typeof value !== 'number') return false;
+    return String(value).toLowerCase().includes('prime');
+  });
+}
+
+function addTime(minutes, meta) {
+  const addMs = minutesToMs(minutes);
+  if (!addMs) return;
+  state.targetAt += addMs;
+  saveState();
+  renderTimer();
+  showEventPop(meta.type, meta.label);
+  pulseRule(meta.ruleEl);
+}
+
+function showEventPop(type, text) {
+  window.clearTimeout(state.popTimer);
+  els.eventPop.classList.remove('is-visible');
+  void els.eventPop.offsetWidth;
+  els.eventPop.dataset.type = type;
+  els.eventPop.textContent = text;
+  els.eventPop.classList.add('is-visible');
+  state.popTimer = window.setTimeout(() => {
+    els.eventPop.classList.remove('is-visible');
+  }, 2400);
+}
+
+function pulseRule(el) {
+  if (!el) return;
+  const previous = state.ruleTimers.get(el);
+  if (previous) window.clearTimeout(previous);
+  el.classList.remove('is-hit');
+  void el.offsetWidth;
+  el.classList.add('is-hit');
+  state.ruleTimers.set(el, window.setTimeout(() => {
+    el.classList.remove('is-hit');
+    state.ruleTimers.delete(el);
+  }, 900));
+}
+
+function updateRuleLabels() {
+  els.ruleFollowValue.textContent = `+${state.followMinutes}m`;
+  els.ruleSubValue.textContent = `+${state.subMinutes}m`;
+  els.ruleGiftValue.textContent = `+${state.giftSubMinutes}m each`;
+  els.ruleBitsValue.textContent = `+${state.bitsStepMinutes}m`;
+  const ruleBitsName = els.ruleBits ? els.ruleBits.querySelector('.rule-name') : null;
+  if (ruleBitsName) ruleBitsName.textContent = `${state.bitsStep} Bits`;
+}
+
+function applyFieldData(fieldData) {
+  state.fieldData = fieldData || {};
+  state.debugMode = Boolean(fieldData.debugMode);
+  state.startingHours = Number(fieldData.startingHours) || 6;
+  state.followMinutes = Number(fieldData.followMinutes) || 10;
+  state.subMinutes = Number(fieldData.subMinutes) || 20;
+  state.giftSubMinutes = Number(fieldData.giftSubMinutes) || 20;
+  state.bitsStep = Number(fieldData.bitsStep) || 100;
+  state.bitsStepMinutes = Number(fieldData.bitsStepMinutes) || 5;
+
+  setCssVar('--follow-colour', fieldData.followColour || '#053F33');
+  setCssVar('--subscribed-colour', fieldData.subscribedColour || '#04473C');
+  setCssVar('--prime-sub-colour', fieldData.primeSubColour || '#00A8E1');
+  setCssVar('--gifted-subs-colour', fieldData.giftedSubsColour || '#2ED9B0');
+  setCssVar('--bits-colour', fieldData.bitsColour || '#F5B301');
+
+  els.adminControls.hidden = !Boolean(fieldData.showAdmin);
+  updateRuleLabels();
+}
+
+function handleFollow() {
+  addTime(state.followMinutes, {
+    type: 'follow',
+    label: `FOLLOW +${state.followMinutes} MIN`,
+    ruleEl: els.ruleFollow
+  });
+}
+
+function handleBits(payload) {
+  const amount = Math.floor(resolveNumber(payload, ['amount', 'count'], 0));
+  const chunks = Math.floor(amount / state.bitsStep);
+  if (chunks <= 0) return;
+  const minutes = chunks * state.bitsStepMinutes;
+  addTime(minutes, {
+    type: 'bits',
+    label: `${amount} BITS +${minutes} MIN`,
+    ruleEl: els.ruleBits
+  });
+}
+
+function handleSub(payload) {
+  const username = resolveUsername(payload);
+  const type = looksPrime(payload) ? 'prime-sub' : 'subscribed';
+  const labelPrefix = looksPrime(payload) ? 'PRIME' : 'SUB';
+  addTime(state.subMinutes, {
+    type,
+    label: `${labelPrefix} +${state.subMinutes} MIN`,
+    ruleEl: els.ruleSub
+  });
+  logDebug('Handled sub', { username, type });
+}
+
+function handleGiftBulk(payload) {
+  const gifter = resolveUsername(payload);
+  const amount = Math.max(1, Math.floor(resolveNumber(payload, ['amount', 'count'], 1)));
+  const minutes = amount * state.giftSubMinutes;
+
+  state.lastBulkGift = {
+    at: Date.now(),
+    sender: gifter.toLowerCase(),
+    amount
+  };
+
+  addTime(minutes, {
+    type: 'gifted-subs',
+    label: `${gifter} +${minutes} MIN`,
+    ruleEl: els.ruleGift
+  });
+}
+
+function isGiftRecipientEcho(payload) {
+  const sender = safeText((payload.data && payload.data.sender) || (payload.event && payload.event.sender)).toLowerCase();
+  if (!sender) return false;
+  const recent = state.lastBulkGift;
+  return Boolean(recent.sender && sender === recent.sender && Date.now() - recent.at < 8000);
+}
+
+function handleIncoming(detail) {
+  const payload = normaliseDetail(detail);
+  const listener = payload.listener;
+
+  window.TeeweeTimerLastEvent = detail;
+  logDebug('Incoming detail', detail);
+  logDebug('Normalised payload', payload);
+
+  if (!listener) return;
+
+  const supported = [
+    'follower-latest',
+    'cheer-latest',
+    'subscriber-latest',
+    'subscriber-new-latest',
+    'subscriber-resub-latest',
+    'subscriber-gifted-latest'
+  ];
+
+  if (!supported.includes(listener)) return;
+  if (isDuplicateEvent(listener, payload)) return;
+
+  if (listener === 'follower-latest') {
+    handleFollow();
+    return;
+  }
+
+  if (listener === 'cheer-latest') {
+    handleBits(payload);
+    return;
+  }
+
+  if (listener === 'subscriber-gifted-latest') {
+    handleGiftBulk(payload);
+    return;
+  }
+
+  if (
+    listener === 'subscriber-latest' ||
+    listener === 'subscriber-new-latest' ||
+    listener === 'subscriber-resub-latest'
+  ) {
+    const data = payload.data || {};
+    const isGiftDerived = Boolean(
+      data.sender ||
+      data.gifted ||
+      data.isGift ||
+      data.isGifted ||
+      data.bulkGifted
+    );
+
+    if (isGiftDerived && isGiftRecipientEcho(payload)) {
+      logDebug('Skipped gift recipient echo', payload);
+      return;
+    }
+
+    if (isGiftDerived) {
+      return;
+    }
+
+    handleSub(payload);
+  }
+}
+
+function bindAdminControls() {
+  if (!els.adminControls) return;
+  els.adminControls.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const action = target.getAttribute('data-action');
+    if (!action) return;
+
+    if (action === 'plus-follow') {
+      handleFollow();
+      return;
+    }
+    if (action === 'plus-sub') {
+      addTime(state.subMinutes, {
+        type: 'subscribed',
+        label: `SUB +${state.subMinutes} MIN`,
+        ruleEl: els.ruleSub
+      });
+      return;
+    }
+    if (action === 'plus-gift') {
+      addTime(state.giftSubMinutes, {
+        type: 'gifted-subs',
+        label: `GIFT +${state.giftSubMinutes} MIN`,
+        ruleEl: els.ruleGift
+      });
+      return;
+    }
+    if (action === 'plus-bits') {
+      addTime(state.bitsStepMinutes, {
+        type: 'bits',
+        label: `${state.bitsStep} BITS +${state.bitsStepMinutes} MIN`,
+        ruleEl: els.ruleBits
+      });
+      return;
+    }
+    if (action === 'reset') {
+      resetTimer();
+    }
+  });
+}
+
+window.addEventListener('onWidgetLoad', function (obj) {
+  cacheEls();
+  applyFieldData((obj.detail && obj.detail.fieldData) || {});
+  bindAdminControls();
+  ensureTimer();
+  tick();
+
+  window.TeeweeTimerReset = resetTimer;
+  window.TeeweeTimerAddMinutes = function (minutes) {
+    addTime(Number(minutes) || 0, {
+      type: 'follow',
+      label: `+${Number(minutes) || 0} MIN`,
+      ruleEl: null
+    });
+  };
+  window.TeeweeTimerState = state;
+});
+
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleIncoming(obj.detail);
+});
+
+window.addEventListener('onSessionUpdate', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleIncoming(obj.detail);
+});
+
+--------------------------------------------
+DATA
+--------------------------------------------
+
+{
+  "eventsLimit": 5,
+  "includeFollowers": "yes",
+  "includeSubs": "yes",
+  "includeCheers": "yes",
+  "minCheer": 1,
+  "widgetName": "Teewee Long Stream Timer",
+  "widgetAuthor": "teewee",
+  "startingHours": 6,
+  "followMinutes": 10,
+  "subMinutes": 20,
+  "giftSubMinutes": 20,
+  "bitsStep": 100,
+  "bitsStepMinutes": 5,
+  "showAdmin": false,
+  "debugMode": false,
+  "followColour": "#053F33",
+  "subscribedColour": "#04473C",
+  "primeSubColour": "#00A8E1",
+  "giftedSubsColour": "#2ED9B0",
+  "bitsColour": "#F5B301"
+}

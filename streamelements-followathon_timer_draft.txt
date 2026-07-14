@@ -1,0 +1,785 @@
+StreamElements Custom Widget – Teewee Follow-a-thon Timer (Draft)
+
+This is a stripped-down version of the long stream timer:
+- Keeps the exact same timer maths and event handling (follow / subs / Prime / gifted subs / bits)
+- Removes the four small rule pills entirely
+- Removes the event pop-up above the timer entirely
+- Adds a single heading above the timer: "Follow-a-thon" (white)
+
+Paste each block into the matching StreamElements Custom Widget tab:
+- Fields
+- HTML
+- CSS
+- JS
+- Data
+
+--------------------------------------------
+FIELDS
+--------------------------------------------
+
+{
+  "widgetName": {
+    "type": "text",
+    "label": "Widget Name",
+    "value": "Teewee Follow-a-thon Timer"
+  },
+  "widgetAuthor": {
+    "type": "text",
+    "label": "Author",
+    "value": "teewee"
+  },
+  "startingHours": {
+    "type": "number",
+    "label": "Starting Hours",
+    "value": 6,
+    "min": 1,
+    "max": 48,
+    "step": 1
+  },
+  "followMinutes": {
+    "type": "number",
+    "label": "Follow Minutes",
+    "value": 10,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "subMinutes": {
+    "type": "number",
+    "label": "Sub Minutes (incl Prime)",
+    "value": 20,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "giftSubMinutes": {
+    "type": "number",
+    "label": "Gifted Sub Minutes (each)",
+    "value": 20,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "bitsStep": {
+    "type": "number",
+    "label": "Bits Step",
+    "value": 100,
+    "min": 1,
+    "max": 10000,
+    "step": 1
+  },
+  "bitsStepMinutes": {
+    "type": "number",
+    "label": "Minutes Per Bits Step",
+    "value": 5,
+    "min": 0,
+    "max": 120,
+    "step": 1
+  },
+  "showAdmin": {
+    "type": "checkbox",
+    "label": "Show Admin Controls",
+    "value": false
+  },
+  "debugMode": {
+    "type": "checkbox",
+    "label": "Debug Mode",
+    "value": false
+  },
+  "followColour": {
+    "type": "colorpicker",
+    "label": "Colour: Follow",
+    "value": "#053F33"
+  },
+  "subscribedColour": {
+    "type": "colorpicker",
+    "label": "Colour: Subscribed",
+    "value": "#04473C"
+  },
+  "primeSubColour": {
+    "type": "colorpicker",
+    "label": "Colour: Prime Sub",
+    "value": "#00A8E1"
+  },
+  "giftedSubsColour": {
+    "type": "colorpicker",
+    "label": "Colour: Gifted Subs",
+    "value": "#2ED9B0"
+  },
+  "bitsColour": {
+    "type": "colorpicker",
+    "label": "Colour: Bits",
+    "value": "#F5B301"
+  }
+}
+
+--------------------------------------------
+HTML
+--------------------------------------------
+
+<div id="timer-root" class="timer-root">
+  <div class="timer-shell">
+    <div class="centre-stack">
+      <div class="title">Follow-a-thon</div>
+      <div class="timer-chip">
+        <span id="timer-sign" class="timer-sign" aria-hidden="true"></span>
+        <span id="timer-display" class="timer-display">06:00:00</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-controls" class="admin-controls" hidden>
+    <button type="button" data-action="plus-follow">+ Follow</button>
+    <button type="button" data-action="plus-sub">+ Sub</button>
+    <button type="button" data-action="plus-gift">+ Gifted</button>
+    <button type="button" data-action="plus-bits">+ 100 Bits</button>
+    <button type="button" data-action="reset">Reset 6h</button>
+  </div>
+</div>
+
+--------------------------------------------
+CSS
+--------------------------------------------
+
+@font-face {
+  font-family: 'Block Script';
+  src: url('https://www.teewee.live/screens/assets/Block%20Script.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --text-main: #f6f8f7;
+  --text-soft: rgba(232, 238, 235, 0.78);
+
+  --follow-colour: #053f33;
+  --subscribed-colour: #04473c;
+  --prime-sub-colour: #00a8e1;
+  --gifted-subs-colour: #2ed9b0;
+  --bits-colour: #f5b301;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.timer-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.timer-shell {
+  position: absolute;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%);
+  width: auto;
+  max-width: calc(100vw - 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.centre-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.title {
+  color: var(--text-main);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.12),
+    0 2px 0 rgba(7, 31, 26, 0.45),
+    0 0 12px rgba(0, 0, 0, 0.2);
+}
+
+.timer-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 18px 6px;
+  min-width: 300px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%),
+    rgba(4, 8, 6, 0.92);
+  box-shadow:
+    0 22px 46px rgba(0, 0, 0, 0.36),
+    0 0 28px rgba(27, 170, 125, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.timer-sign {
+  min-width: 12px;
+  color: rgba(246, 248, 247, 0.92);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+}
+
+.timer-display {
+  display: inline-block;
+  min-width: 220px;
+  color: var(--text-main);
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-size: clamp(36px, 3.8vw, 59px);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.18),
+    0 5px 0 rgba(7, 31, 26, 0.58),
+    0 0 24px rgba(0, 0, 0, 0.26);
+}
+
+.admin-controls {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  pointer-events: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: min(540px, calc(100vw - 48px));
+}
+
+.admin-controls[hidden] {
+  display: none;
+}
+
+.admin-controls button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(4, 8, 6, 0.92);
+  color: var(--text-main);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font: 600 13px/1 'Segoe UI', sans-serif;
+  cursor: pointer;
+}
+
+--------------------------------------------
+JS
+--------------------------------------------
+
+const STORAGE_KEY = 'teewee_followathon_timer_v1';
+
+const state = {
+  fieldData: {},
+  debugMode: false,
+  startingHours: 6,
+  followMinutes: 10,
+  subMinutes: 20,
+  giftSubMinutes: 20,
+  bitsStep: 100,
+  bitsStepMinutes: 5,
+  startedDurationMs: 6 * 60 * 60 * 1000,
+  targetAt: 0,
+  fingerprints: new Map(),
+  lastBulkGift: {
+    at: 0,
+    sender: '',
+    amount: 0
+  }
+};
+
+const els = {};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function cacheEls() {
+  els.root = $('timer-root');
+  els.timerDisplay = $('timer-display');
+  els.timerSign = $('timer-sign');
+  els.adminControls = $('admin-controls');
+}
+
+function logDebug(label, value) {
+  if (!state.debugMode) return;
+  console.log('[Teewee Follow-a-thon]', label, value);
+}
+
+function setCssVar(name, value) {
+  if (!value) return;
+  document.documentElement.style.setProperty(name, value);
+}
+
+function formatClock(ms) {
+  const totalSeconds = Math.floor(Math.abs(ms) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':');
+}
+
+function minutesToMs(minutes) {
+  return Math.max(0, Number(minutes) || 0) * 60 * 1000;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        targetAt: state.targetAt,
+        startedDurationMs: state.startedDurationMs
+      })
+    );
+  } catch (error) {
+    logDebug('saveState failed', error);
+  }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return false;
+    if (!Number.isFinite(parsed.targetAt)) return false;
+    state.targetAt = parsed.targetAt;
+    if (Number.isFinite(parsed.startedDurationMs)) {
+      state.startedDurationMs = parsed.startedDurationMs;
+    }
+    return true;
+  } catch (error) {
+    logDebug('loadState failed', error);
+    return false;
+  }
+}
+
+function resetTimer() {
+  state.startedDurationMs = state.startingHours * 60 * 60 * 1000;
+  state.targetAt = Date.now() + state.startedDurationMs;
+  saveState();
+  renderTimer();
+}
+
+function ensureTimer() {
+  if (loadState()) {
+    renderTimer();
+    return;
+  }
+  resetTimer();
+}
+
+function renderTimer() {
+  const remainingMs = state.targetAt - Date.now();
+  els.timerSign.textContent = remainingMs < 0 ? '-' : '';
+  els.timerDisplay.textContent = formatClock(remainingMs);
+}
+
+function tick() {
+  renderTimer();
+  window.requestAnimationFrame(() => {
+    window.setTimeout(tick, 250);
+  });
+}
+
+function cleanupFingerprints() {
+  const now = Date.now();
+  for (const [key, timestamp] of state.fingerprints.entries()) {
+    if (now - timestamp > 8000) {
+      state.fingerprints.delete(key);
+    }
+  }
+}
+
+function buildFingerprint(listener, payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  return [
+    listener,
+    data._id,
+    data.id,
+    data.name,
+    data.username,
+    data.displayName,
+    data.sender,
+    data.gifted,
+    data.bulkGifted,
+    data.amount,
+    data.createdAt,
+    event._id,
+    event.id
+  ]
+    .filter(Boolean)
+    .join('|');
+}
+
+function isDuplicateEvent(listener, payload) {
+  cleanupFingerprints();
+
+  const fingerprint = buildFingerprint(listener, payload);
+  if (!fingerprint) return false;
+
+  const now = Date.now();
+  const previous = state.fingerprints.get(fingerprint);
+  state.fingerprints.set(fingerprint, now);
+
+  return Boolean(previous && now - previous < 3000);
+}
+
+function normaliseDetail(detail) {
+  const event = detail && typeof detail.event === 'object' ? detail.event : {};
+  const eventData = event && typeof event.data === 'object' ? event.data : {};
+
+  return {
+    listener: detail && detail.listener ? detail.listener : '',
+    event,
+    data: {
+      ...(detail || {}),
+      ...(event || {}),
+      ...(eventData || {})
+    }
+  };
+}
+
+function safeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function resolveUsername(payload, fallback = 'Someone') {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+  const candidates = [
+    data.name,
+    data.username,
+    data.displayName,
+    data.display_name,
+    data.userName,
+    data.senderName,
+    event.name,
+    event.username,
+    event.displayName,
+    event.display_name
+  ];
+
+  for (const candidate of candidates) {
+    const text = safeText(candidate);
+    if (text) return text;
+  }
+
+  return fallback;
+}
+
+function resolveNumber(payload, keys, fallback = 0) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
+}
+
+function resolveGiftCount(payload, fallback = 1) {
+  const count = resolveNumber(
+    payload,
+    ['count', 'amount', 'quantity', 'bulkGiftedAmount', 'giftedAmount', 'gifts', 'bulkGiftedCount'],
+    NaN
+  );
+
+  if (Number.isFinite(count) && count > 0) {
+    return Math.max(1, Math.floor(count));
+  }
+
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+  const bulkFlag = data.bulkGifted ?? event.bulkGifted;
+
+  if (bulkFlag === true || bulkFlag === 'true') return fallback;
+  return fallback;
+}
+
+function looksPrime(payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+  const candidates = [
+    data.isPrime,
+    data.prime,
+    data.plan,
+    data.planName,
+    data.subPlan,
+    data.subscriptionPlan,
+    data.tier,
+    data.message,
+    event.isPrime,
+    event.prime,
+    event.plan,
+    event.planName,
+    event.subPlan,
+    event.subscriptionPlan,
+    event.tier,
+    event.message
+  ];
+
+  return candidates.some((value) => {
+    if (value === true) return true;
+    if (typeof value !== 'string' && typeof value !== 'number') return false;
+    return String(value).toLowerCase().includes('prime');
+  });
+}
+
+function addMinutes(minutes) {
+  const addMs = minutesToMs(minutes);
+  if (!addMs) return;
+  state.targetAt += addMs;
+  saveState();
+  renderTimer();
+}
+
+function handleFollow() {
+  addMinutes(state.followMinutes);
+}
+
+function handleBits(payload) {
+  const amount = Math.floor(resolveNumber(payload, ['amount', 'count'], 0));
+  const chunks = Math.floor(amount / state.bitsStep);
+  if (chunks <= 0) return;
+  addMinutes(chunks * state.bitsStepMinutes);
+}
+
+function handleSub(payload) {
+  const isPrime = looksPrime(payload);
+  logDebug('Handled sub', { username: resolveUsername(payload), isPrime });
+  addMinutes(state.subMinutes);
+}
+
+function handleGiftBulk(payload) {
+  const gifter = resolveUsername(payload);
+  const amount = resolveGiftCount(payload, 1);
+
+  state.lastBulkGift = {
+    at: Date.now(),
+    sender: gifter.toLowerCase(),
+    amount
+  };
+
+  addMinutes(amount * state.giftSubMinutes);
+}
+
+function handleGiftRecipient(payload) {
+  const sender = safeText((payload.data && payload.data.sender) || (payload.event && payload.event.sender));
+  const recipient = safeText((payload.data && payload.data.gifted) || (payload.data && payload.data.name));
+  logDebug('Handled gifted recipient', { sender, recipient });
+  addMinutes(state.giftSubMinutes);
+}
+
+function isGiftRecipientEcho(payload) {
+  const sender = safeText((payload.data && payload.data.sender) || (payload.event && payload.event.sender)).toLowerCase();
+  if (!sender) return false;
+  const recent = state.lastBulkGift;
+  return Boolean(recent.sender && sender === recent.sender && Date.now() - recent.at < 8000);
+}
+
+function isBulkGiftDerivedEvent(payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+  const sender = safeText(data.sender || event.sender);
+  const gifted = safeText(data.gifted || event.gifted);
+  const bulkFlag = data.bulkGifted ?? event.bulkGifted;
+  const count = resolveGiftCount(payload, 1);
+
+  if (!sender) return false;
+  if (bulkFlag === true || bulkFlag === 'true') return true;
+  if (!gifted && count >= 1) return true;
+  if (count > 1) return true;
+  return false;
+}
+
+function handleIncoming(detail) {
+  const payload = normaliseDetail(detail);
+  const listener = payload.listener;
+
+  window.TeeweeFollowathonLastEvent = detail;
+  logDebug('Incoming detail', detail);
+
+  if (!listener) return;
+
+  const supported = [
+    'follower-latest',
+    'cheer-latest',
+    'subscriber-latest',
+    'subscriber-new-latest',
+    'subscriber-resub-latest',
+    'subscriber-gifted-latest'
+  ];
+
+  if (!supported.includes(listener)) return;
+  if (isDuplicateEvent(listener, payload)) return;
+
+  if (listener === 'follower-latest') {
+    handleFollow();
+    return;
+  }
+
+  if (listener === 'cheer-latest') {
+    handleBits(payload);
+    return;
+  }
+
+  if (listener === 'subscriber-gifted-latest') {
+    handleGiftBulk(payload);
+    return;
+  }
+
+  if (
+    listener === 'subscriber-latest' ||
+    listener === 'subscriber-new-latest' ||
+    listener === 'subscriber-resub-latest'
+  ) {
+    const data = payload.data || {};
+    const isGiftDerived = Boolean(
+      data.sender ||
+      data.gifted ||
+      data.isGift ||
+      data.isGifted ||
+      data.bulkGifted
+    );
+
+    if (isGiftDerived && isGiftRecipientEcho(payload)) {
+      logDebug('Skipped gift recipient echo', payload);
+      return;
+    }
+
+    if (isGiftDerived) {
+      if (isBulkGiftDerivedEvent(payload)) {
+        handleGiftBulk(payload);
+        return;
+      }
+
+      handleGiftRecipient(payload);
+      return;
+    }
+
+    handleSub(payload);
+  }
+}
+
+function applyFieldData(fieldData) {
+  state.fieldData = fieldData || {};
+  state.debugMode = Boolean(fieldData.debugMode);
+  state.startingHours = Number(fieldData.startingHours) || 6;
+  state.followMinutes = Number(fieldData.followMinutes) || 10;
+  state.subMinutes = Number(fieldData.subMinutes) || 20;
+  state.giftSubMinutes = Number(fieldData.giftSubMinutes) || 20;
+  state.bitsStep = Number(fieldData.bitsStep) || 100;
+  state.bitsStepMinutes = Number(fieldData.bitsStepMinutes) || 5;
+
+  setCssVar('--follow-colour', fieldData.followColour || '#053F33');
+  setCssVar('--subscribed-colour', fieldData.subscribedColour || '#04473C');
+  setCssVar('--prime-sub-colour', fieldData.primeSubColour || '#00A8E1');
+  setCssVar('--gifted-subs-colour', fieldData.giftedSubsColour || '#2ED9B0');
+  setCssVar('--bits-colour', fieldData.bitsColour || '#F5B301');
+
+  els.adminControls.hidden = !Boolean(fieldData.showAdmin);
+}
+
+function bindAdminControls() {
+  if (!els.adminControls) return;
+  els.adminControls.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const action = target.getAttribute('data-action');
+    if (!action) return;
+
+    if (action === 'plus-follow') {
+      handleFollow();
+      return;
+    }
+    if (action === 'plus-sub') {
+      addMinutes(state.subMinutes);
+      return;
+    }
+    if (action === 'plus-gift') {
+      addMinutes(state.giftSubMinutes);
+      return;
+    }
+    if (action === 'plus-bits') {
+      addMinutes(state.bitsStepMinutes);
+      return;
+    }
+    if (action === 'reset') {
+      resetTimer();
+    }
+  });
+}
+
+window.addEventListener('onWidgetLoad', function (obj) {
+  cacheEls();
+  applyFieldData((obj.detail && obj.detail.fieldData) || {});
+  bindAdminControls();
+  ensureTimer();
+  tick();
+
+  window.TeeweeFollowathonReset = resetTimer;
+  window.TeeweeFollowathonAddMinutes = function (minutes) {
+    addMinutes(Number(minutes) || 0);
+  };
+  window.TeeweeFollowathonState = state;
+});
+
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleIncoming(obj.detail);
+});
+
+window.addEventListener('onSessionUpdate', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleIncoming(obj.detail);
+});
+
+--------------------------------------------
+DATA
+--------------------------------------------
+
+{
+  "eventsLimit": 5,
+  "includeFollowers": "yes",
+  "includeSubs": "yes",
+  "includeCheers": "yes",
+  "minCheer": 1,
+  "widgetName": "Teewee Follow-a-thon Timer",
+  "widgetAuthor": "teewee",
+  "startingHours": 6,
+  "followMinutes": 10,
+  "subMinutes": 20,
+  "giftSubMinutes": 20,
+  "bitsStep": 100,
+  "bitsStepMinutes": 5,
+  "showAdmin": false,
+  "debugMode": false,
+  "followColour": "#053F33",
+  "subscribedColour": "#04473C",
+  "primeSubColour": "#00A8E1",
+  "giftedSubsColour": "#2ED9B0",
+  "bitsColour": "#F5B301"
+}
