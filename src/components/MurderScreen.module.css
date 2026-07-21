@@ -1,0 +1,211 @@
+.container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #040102;
+  color: #f7f2f4;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 44% 42%, rgba(101, 10, 31, 0.12) 0%, rgba(101, 10, 31, 0.045) 16%, rgba(101, 10, 31, 0) 34%),
+    radial-gradient(ellipse at 58% 56%, rgba(66, 6, 20, 0.18) 0%, rgba(66, 6, 20, 0) 28%),
+    radial-gradient(ellipse at 52% 62%, rgba(43, 4, 13, 0.14) 0%, rgba(43, 4, 13, 0) 24%),
+    linear-gradient(180deg, rgba(7, 1, 3, 0.82) 0%, rgba(2, 0, 1, 0.98) 100%);
+}
+
+.spinnerLayer {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  filter: saturate(0.94) brightness(0.34) contrast(0.9) blur(10px);
+}
+
+.redWash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 42% 54%, rgba(168, 18, 49, 0.08) 0%, rgba(168, 18, 49, 0.03) 14%, rgba(168, 18, 49, 0) 30%),
+    radial-gradient(ellipse at 56% 46%, rgba(122, 16, 40, 0.08) 0%, rgba(122, 16, 40, 0.025) 14%, rgba(122, 16, 40, 0) 28%),
+    radial-gradient(ellipse at 34% 36%, rgba(114, 12, 36, 0.07) 0%, rgba(114, 12, 36, 0) 22%),
+    radial-gradient(ellipse at 72% 62%, rgba(92, 8, 28, 0.07) 0%, rgba(92, 8, 28, 0) 18%),
+    radial-gradient(ellipse at 50% 74%, rgba(72, 6, 22, 0.07) 0%, rgba(72, 6, 22, 0) 20%),
+    radial-gradient(ellipse at 62% 28%, rgba(138, 14, 42, 0.045) 0%, rgba(138, 14, 42, 0) 14%);
+  mix-blend-mode: screen;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.smokeLayer {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 26% 54%, rgba(56, 6, 16, 0.24) 0%, rgba(56, 6, 16, 0.08) 16%, rgba(56, 6, 16, 0) 34%),
+    radial-gradient(ellipse at 74% 40%, rgba(64, 6, 19, 0.22) 0%, rgba(64, 6, 19, 0.08) 14%, rgba(64, 6, 19, 0) 30%),
+    radial-gradient(ellipse at 54% 74%, rgba(45, 4, 13, 0.26) 0%, rgba(45, 4, 13, 0.08) 14%, rgba(45, 4, 13, 0) 28%),
+    radial-gradient(ellipse at 48% 30%, rgba(77, 8, 24, 0.14) 0%, rgba(77, 8, 24, 0.05) 12%, rgba(77, 8, 24, 0) 24%);
+  filter: blur(34px);
+  opacity: 0.9;
+  animation: smokeShift 22s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.lightSweep {
+  position: absolute;
+  inset: -12%;
+  background:
+    linear-gradient(118deg, rgba(255, 240, 244, 0) 34%, rgba(255, 240, 244, 0.016) 44%, rgba(173, 18, 52, 0.05) 50%, rgba(255, 240, 244, 0.014) 56%, rgba(255, 240, 244, 0) 68%),
+    radial-gradient(ellipse at 50% 46%, rgba(255, 236, 241, 0.028) 0%, rgba(255, 236, 241, 0) 14%);
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  transform: translateX(-16%) translateY(-2%) rotate(-6deg);
+  animation: sweepDrift 18s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.grainLayer {
+  position: absolute;
+  inset: -20%;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.085) 0.7px, transparent 0.95px),
+    radial-gradient(circle, rgba(133, 23, 52, 0.08) 0.6px, transparent 1px);
+  background-size: 7px 7px, 11px 11px;
+  background-position: 0 0, 2px 3px;
+  opacity: 0.045;
+  mix-blend-mode: soft-light;
+  transform: rotate(2deg) scale(1.05);
+  animation: grainShift 0.34s steps(2) infinite;
+  pointer-events: none;
+}
+
+.edgeFalloff {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.08) 16%, rgba(0, 0, 0, 0.08) 84%, rgba(0, 0, 0, 0.62) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.54) 0%, rgba(0, 0, 0, 0.08) 16%, rgba(0, 0, 0, 0.08) 84%, rgba(0, 0, 0, 0.66) 100%);
+  pointer-events: none;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(0, 0, 0, 0) 16%, rgba(0, 0, 0, 0.16) 54%, rgba(0, 0, 0, 0.78) 100%),
+    linear-gradient(180deg, rgba(4, 0, 1, 0.1) 0%, rgba(4, 0, 1, 0.54) 100%);
+  pointer-events: none;
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.014) 0,
+    rgba(255, 255, 255, 0.014) 1px,
+    transparent 1px,
+    transparent 5px
+  );
+  opacity: 0.08;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.flashLayer {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 52% 44%, rgba(255, 239, 243, 0.12) 0%, rgba(255, 239, 243, 0.04) 14%, rgba(255, 239, 243, 0) 28%),
+    linear-gradient(120deg, rgba(255, 248, 250, 0) 36%, rgba(255, 248, 250, 0.05) 50%, rgba(255, 248, 250, 0) 66%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: coldFlash 16s linear infinite;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  width: 100%;
+  padding: 4rem 2rem;
+}
+
+@keyframes coldFlash {
+  0%,
+  86%,
+  100% {
+    opacity: 0;
+  }
+  87% {
+    opacity: 0.03;
+  }
+  87.8% {
+    opacity: 0;
+  }
+  88.3% {
+    opacity: 0.08;
+  }
+  89.1% {
+    opacity: 0;
+  }
+  89.7% {
+    opacity: 0.025;
+  }
+  90.4% {
+    opacity: 0;
+  }
+}
+
+@keyframes smokeShift {
+  from {
+    transform: translate3d(-1.5%, 0.5%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.5%, -0.5%, 0) scale(1.04);
+  }
+}
+
+@keyframes sweepDrift {
+  0%,
+  100% {
+    transform: translateX(-16%) translateY(-2%) rotate(-6deg);
+    opacity: 0.34;
+  }
+  50% {
+    transform: translateX(8%) translateY(1%) rotate(-3deg);
+    opacity: 0.58;
+  }
+}
+
+@keyframes grainShift {
+  0% {
+    transform: rotate(2deg) scale(1.05) translate(0, 0);
+  }
+  33% {
+    transform: rotate(2deg) scale(1.05) translate(-0.6%, 0.4%);
+  }
+  66% {
+    transform: rotate(2deg) scale(1.05) translate(0.5%, -0.3%);
+  }
+  100% {
+    transform: rotate(2deg) scale(1.05) translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashLayer,
+  .smokeLayer,
+  .lightSweep,
+  .grainLayer {
+    animation: none;
+  }
+
+  .flashLayer {
+    opacity: 0;
+  }
+}

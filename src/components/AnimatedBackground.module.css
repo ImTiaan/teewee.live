@@ -1,5 +1,11 @@
 .container {
-    background: #040806;
+    --background-base: #040806;
+    --background-glow: rgba(13, 54, 43, 0.16);
+    --burst-colour: rgba(5, 63, 51, 0.92);
+    --grain-opacity: 0.04;
+    background:
+        radial-gradient(circle at center, var(--background-glow) 0%, rgba(0, 0, 0, 0) 34%),
+        var(--background-base);
     position: absolute;
     top: 0;
     left: 0;
@@ -7,6 +13,20 @@
     height: 100%;
     z-index: 0;
     overflow: hidden;
+}
+
+.greenTheme {
+    --background-base: #040806;
+    --background-glow: rgba(13, 54, 43, 0.16);
+    --burst-colour: rgba(5, 63, 51, 0.92);
+    --grain-opacity: 0.04;
+}
+
+.redTheme {
+    --background-base: #090304;
+    --background-glow: rgba(102, 9, 30, 0.18);
+    --burst-colour: rgba(103, 15, 34, 0.94);
+    --grain-opacity: 0.05;
 }
 
 :global(:root) {
@@ -31,7 +51,7 @@
     opacity: 0.22;
     background: repeating-conic-gradient(
         from -6deg,
-        rgba(5, 63, 51, 0.92) 0deg 10deg,
+        var(--burst-colour) 0deg 10deg,
         transparent 10deg 17deg
     );
     mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 170px, rgba(0, 0, 0, 1) 171px 100%);
@@ -47,7 +67,7 @@
     width: 200%;
     height: 200%;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-    opacity: 0.04;
+    opacity: var(--grain-opacity);
     pointer-events: none;
     animation: grain 8s steps(10) infinite;
     z-index: 1;
