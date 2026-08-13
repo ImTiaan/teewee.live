@@ -1,9 +1,6 @@
-import type { Metadata } from 'next';
-import styles from './WeeteeScreen.module.css';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Weetee',
-};
+import styles from './WeeteeScreen.module.css';
 
 export default function WeeteePage() {
   return (
