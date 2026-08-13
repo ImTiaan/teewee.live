@@ -460,6 +460,9 @@ const state = {
   giftBulkAt: 0,
   giftBulkSender: '',
   giftBulkCount: 0,
+  pendingGiftBulkSender: '',
+  pendingGiftBulkCount: 0,
+  pendingGiftBulkTimer: 0,
   pendingGiftRecipients: [],
   pendingGiftTimer: 0
 };
@@ -790,27 +793,72 @@ function buildGiftBulkAlert(gifter, count) {
   };
 }
 
-function buildGiftRecipientAlert(recipient, gifter) {
-  return {
-    type: 'gifted-subs',
-    headline: `${recipient} received a gifted sub from ${gifter}`
-  };
-}
-
 function flushPendingGiftRecipients() {
   if (!state.pendingGiftRecipients.length) return;
 
-  const recipients = state.pendingGiftRecipients.slice();
   state.pendingGiftRecipients = [];
 
   if (state.pendingGiftTimer) {
     window.clearTimeout(state.pendingGiftTimer);
     state.pendingGiftTimer = 0;
   }
+}
 
-  for (const item of recipients) {
-    enqueueAlert(buildGiftRecipientAlert(item.recipient, item.gifter));
+function flushPendingGiftBulk() {
+  if (state.pendingGiftBulkTimer) {
+    window.clearTimeout(state.pendingGiftBulkTimer);
+    state.pendingGiftBulkTimer = 0;
   }
+
+  if (!state.pendingGiftBulkSender || !state.pendingGiftBulkCount) return;
+
+  const gifter = state.pendingGiftBulkSender;
+  const count = state.pendingGiftBulkCount;
+
+  state.pendingGiftBulkSender = '';
+  state.pendingGiftBulkCount = 0;
+  state.giftBulkAt = Date.now();
+  state.giftBulkSender = gifter;
+  state.giftBulkCount = count;
+
+  enqueueAlert(buildGiftBulkAlert(gifter, count));
+}
+
+function queueGiftBulk(gifter, count) {
+  const safeGifter = (gifter || '').trim();
+  const safeCount = Math.max(1, Math.floor(Number(count) || 1));
+  if (!safeGifter) return;
+
+  if (
+    state.pendingGiftBulkSender &&
+    state.pendingGiftBulkSender.toLowerCase() !== safeGifter.toLowerCase()
+  ) {
+    flushPendingGiftBulk();
+  }
+
+  flushPendingGiftRecipients();
+
+  if (
+    state.pendingGiftBulkSender &&
+    state.pendingGiftBulkSender.toLowerCase() === safeGifter.toLowerCase()
+  ) {
+    state.pendingGiftBulkCount += safeCount;
+  } else {
+    state.pendingGiftBulkSender = safeGifter;
+    state.pendingGiftBulkCount = safeCount;
+  }
+
+  state.giftBulkAt = Date.now();
+  state.giftBulkSender = safeGifter;
+  state.giftBulkCount = state.pendingGiftBulkCount;
+
+  if (state.pendingGiftBulkTimer) {
+    window.clearTimeout(state.pendingGiftBulkTimer);
+  }
+
+  state.pendingGiftBulkTimer = window.setTimeout(() => {
+    flushPendingGiftBulk();
+  }, 1200);
 }
 
 function scheduleSyntheticGiftBulk() {
@@ -856,7 +904,21 @@ function buildAlert(listener, payload) {
     state.giftBulkAt = Date.now();
     state.giftBulkSender = username;
     state.giftBulkCount = amount;
-    return buildGiftBulkAlert(username, amount);
+
+    if (state.pendingGiftBulkTimer) {
+      window.clearTimeout(state.pendingGiftBulkTimer);
+      state.pendingGiftBulkTimer = 0;
+    }
+    state.pendingGiftBulkSender = '';
+    state.pendingGiftBulkCount = 0;
+
+    if (state.pendingGiftTimer) {
+      window.clearTimeout(state.pendingGiftTimer);
+      state.pendingGiftTimer = 0;
+    }
+    state.pendingGiftRecipients = [];
+
+    return null;
   }
 
   if (
@@ -867,23 +929,19 @@ function buildAlert(listener, payload) {
     if (isGiftDerivedSubscriberEvent(listener, payload)) {
       const gifter = resolveString(payload, ['sender', 'senderName'], '');
       const recipient = resolveString(payload, ['gifted', 'name'], '');
-
-      if (!gifter || !recipient) return null;
-
       const now = Date.now();
-      const bulkIsRecent =
-        state.giftBulkAt &&
-        now - state.giftBulkAt < 12000 &&
-        state.giftBulkSender &&
-        gifter.toLowerCase() === state.giftBulkSender.toLowerCase();
+      const gifterFallback =
+        state.giftBulkAt && now - state.giftBulkAt < 12000 ? state.giftBulkSender : '';
 
-      if (bulkIsRecent) {
-        return buildGiftRecipientAlert(recipient, gifter);
-      }
+      const finalGifter = gifter || gifterFallback;
+      const finalRecipient = recipient || username;
 
-      state.pendingGiftRecipients.push({ gifter, recipient, at: now });
-      scheduleSyntheticGiftBulk();
-      return null;
+      if (!finalGifter || !finalRecipient) return null;
+
+      return {
+        type: 'gifted-subs',
+        headline: `${finalRecipient} received a gifted sub from ${finalGifter}`
+      };
     }
 
     if (looksPrime(payload)) {
@@ -981,6 +1039,17 @@ function handleIncoming(detail) {
     return;
   }
 
+  if (
+    listener === 'subscriber-gifted-latest' ||
+    listener === 'subscriber-latest' ||
+    listener === 'subscriber-new-latest' ||
+    listener === 'subscriber-resub-latest'
+  ) {
+    // #region debug-point E:incoming-subscriber-event
+    fetch("http://127.0.0.1:7777/event",{method:"POST",body:JSON.stringify({sessionId:"gifted-sub-total",runId:"pre",hypothesisId:"E",location:"streamelements-alerts_alltypes_draft.txt:handleIncoming",msg:"[DEBUG] Incoming subscriber-family event",data:{listener,dataKeys:Object.keys((payload&&payload.data)||{}),eventKeys:Object.keys((payload&&payload.event)||{})},ts:Date.now()})}).catch(()=>{});
+    // #endregion
+  }
+
   const alert = buildAlert(listener, payload);
 
   if (!alert) {
@@ -1073,5 +1142,5 @@ Hype Train payloads are delivered as events; the most reliable way to confirm th
 Gifted subs can arrive in either form per StreamElements docs:
 - listener "subscriber-gifted-latest" (gifter + amount)
 - listener "subscriber-latest" with fields sender/gifted
-This draft handles both, shows the bulk gifter first, then recipients as:
-"USERNAME received a gifted sub from GIFTER", and suppresses duplicates when both forms arrive.
+This draft handles both, but now only shows one gifted alert for the gifter with the total amount.
+Recipient gifted-sub events are used only as a fallback signal to synthesise the bulk count when needed.

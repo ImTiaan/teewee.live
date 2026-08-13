@@ -12,7 +12,7 @@ This widget is a simple top-right sub milestone tracker:
 
 Important:
 - The milestone list is editable in the `milestonesJson` field
-- Default goals are included for `50, 60, 70, 80, 90, 100`
+- Default goals are included through `100`, then continue in `+20` steps
 - Replace the placeholder reward text with your real rewards
 
 Paste each block into the matching StreamElements Custom Widget tab:
@@ -58,7 +58,7 @@ FIELDS
   "milestonesJson": {
     "type": "textarea",
     "label": "Milestones JSON",
-    "value": "[\n  {\"goal\": 35, \"label\": \"Homeless Busker (Colt Wizney)\"},\n  {\"goal\": 50, \"label\": \"Tow Terrorist (Lynn Rayson)\"},\n  {\"goal\": 75, \"label\": \"Drunk stream\"},\n  {\"goal\": 100, \"label\": \"12h stream\"}\n]"
+    "value": "[\n  {\"goal\": 35, \"label\": \"Homeless Busker (Colt Wizney)\"},\n  {\"goal\": 50, \"label\": \"Tow Terrorist (Lynn Rayson)\"},\n  {\"goal\": 75, \"label\": \"Drunk stream\"},\n  {\"goal\": 100, \"label\": \"12h stream\"},\n  {\"goal\": 120, \"label\": \"Placeholder event for 120 subs\"},\n  {\"goal\": 140, \"label\": \"Placeholder event for 140 subs\"},\n  {\"goal\": 160, \"label\": \"Placeholder event for 160 subs\"},\n  {\"goal\": 180, \"label\": \"Placeholder event for 180 subs\"},\n  {\"goal\": 200, \"label\": \"Placeholder event for 200 subs\"},\n  {\"goal\": 220, \"label\": \"Placeholder event for 220 subs\"},\n  {\"goal\": 240, \"label\": \"Placeholder event for 240 subs\"},\n  {\"goal\": 260, \"label\": \"Placeholder event for 260 subs\"},\n  {\"goal\": 280, \"label\": \"Placeholder event for 280 subs\"},\n  {\"goal\": 300, \"label\": \"Placeholder event for 300 subs\"},\n  {\"goal\": 320, \"label\": \"Placeholder event for 320 subs\"},\n  {\"goal\": 340, \"label\": \"Placeholder event for 340 subs\"},\n  {\"goal\": 360, \"label\": \"Placeholder event for 360 subs\"},\n  {\"goal\": 380, \"label\": \"Placeholder event for 380 subs\"},\n  {\"goal\": 400, \"label\": \"Placeholder event for 400 subs\"}\n]"
   },
   "debugMode": {
     "type": "checkbox",
@@ -603,7 +603,7 @@ DATA
   "titleText": "Sub Goal",
   "showTitle": true,
   "currentSubsFallback": 0,
-  "milestonesJson": "[\n  {\"goal\": 35, \"label\": \"Homeless Busker (Colt Wizney)\"},\n  {\"goal\": 50, \"label\": \"Tow Terrorist (Lynn Rayson)\"},\n  {\"goal\": 75, \"label\": \"Drunk stream\"},\n  {\"goal\": 100, \"label\": \"12h stream\"}\n]",
+  "milestonesJson": "[\n  {\"goal\": 35, \"label\": \"Homeless Busker (Colt Wizney)\"},\n  {\"goal\": 50, \"label\": \"Tow Terrorist (Lynn Rayson)\"},\n  {\"goal\": 75, \"label\": \"Drunk stream\"},\n  {\"goal\": 100, \"label\": \"12h stream\"},\n  {\"goal\": 120, \"label\": \"Placeholder event for 120 subs\"},\n  {\"goal\": 140, \"label\": \"Placeholder event for 140 subs\"},\n  {\"goal\": 160, \"label\": \"Placeholder event for 160 subs\"},\n  {\"goal\": 180, \"label\": \"Placeholder event for 180 subs\"},\n  {\"goal\": 200, \"label\": \"Placeholder event for 200 subs\"},\n  {\"goal\": 220, \"label\": \"Placeholder event for 220 subs\"},\n  {\"goal\": 240, \"label\": \"Placeholder event for 240 subs\"},\n  {\"goal\": 260, \"label\": \"Placeholder event for 260 subs\"},\n  {\"goal\": 280, \"label\": \"Placeholder event for 280 subs\"},\n  {\"goal\": 300, \"label\": \"Placeholder event for 300 subs\"},\n  {\"goal\": 320, \"label\": \"Placeholder event for 320 subs\"},\n  {\"goal\": 340, \"label\": \"Placeholder event for 340 subs\"},\n  {\"goal\": 360, \"label\": \"Placeholder event for 360 subs\"},\n  {\"goal\": 380, \"label\": \"Placeholder event for 380 subs\"},\n  {\"goal\": 400, \"label\": \"Placeholder event for 400 subs\"}\n]",
   "debugMode": false,
   "accentColour": "#1BAA7D",
   "textColour": "#F6F8F7",
