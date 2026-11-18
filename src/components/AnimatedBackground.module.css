@@ -31,22 +31,17 @@
 
 .gtaTheme {
     --background-base: #1a0a2e;
-    --background-glow: radial-gradient(
-        circle at 50% 38%,
-        rgba(201, 52, 155, 0.18) 0%,
-        rgba(243, 106, 120, 0.08) 34%,
-        rgba(0, 0, 0, 0) 70%
-    );
+    --background-glow: none;
     --sunset-gradient: linear-gradient(
         180deg,
-        #2a0e4a 0%,
-        #3B146B 12%,
-        #5a1a7d 28%,
-        #7B208F 44%,
-        #a82a95 58%,
-        #C9349B 70%,
-        #F36A78 82%,
-        #F87572 92%,
+        #4a1a7a 0%,
+        #5c1f8a 10%,
+        #6e2499 22%,
+        #8a2ba0 36%,
+        #a82a95 50%,
+        #C9349B 64%,
+        #F36A78 78%,
+        #F87572 88%,
         #FF9B55 100%
     );
     --burst-colour: rgba(201, 52, 155, 0.7);
@@ -55,7 +50,6 @@
 
 .gtaTheme.container {
     background:
-        var(--background-glow),
         var(--sunset-gradient),
         var(--background-base);
 }
