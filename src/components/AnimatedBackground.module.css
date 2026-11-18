@@ -89,31 +89,7 @@
 }
 
 .gtaTheme .burst {
-    opacity: 0.18;
-    background: conic-gradient(
-        from -6deg,
-        #C9349B 0deg 10deg, transparent 10deg 17deg,
-        #F36A78 17deg 27deg, transparent 27deg 34deg,
-        #FF9B55 34deg 44deg, transparent 44deg 51deg,
-        #FFB455 51deg 61deg, transparent 61deg 68deg,
-        #C9349B 68deg 78deg, transparent 78deg 85deg,
-        #F36A78 85deg 95deg, transparent 95deg 102deg,
-        #FF9B55 102deg 112deg, transparent 112deg 119deg,
-        #FFB455 119deg 129deg, transparent 129deg 136deg,
-        #C9349B 136deg 146deg, transparent 146deg 153deg,
-        #F36A78 153deg 163deg, transparent 163deg 170deg,
-        #FF9B55 170deg 180deg, transparent 180deg 187deg,
-        #FFB455 187deg 197deg, transparent 197deg 204deg,
-        #C9349B 204deg 214deg, transparent 214deg 221deg,
-        #F36A78 221deg 231deg, transparent 231deg 238deg,
-        #FF9B55 238deg 248deg, transparent 248deg 255deg,
-        #FFB455 255deg 265deg, transparent 265deg 272deg,
-        #C9349B 272deg 282deg, transparent 282deg 289deg,
-        #F36A78 289deg 299deg, transparent 299deg 306deg,
-        #FF9B55 306deg 316deg, transparent 316deg 323deg,
-        #FFB455 323deg 333deg, transparent 333deg 340deg,
-        #C9349B 340deg 350deg, transparent 350deg 360deg
-    );
+    display: none;
 }
 
 .glowPulse {
@@ -131,24 +107,67 @@
     border-radius: 50%;
     background: radial-gradient(
         circle at center,
-        rgba(201, 52, 155, 0.32) 0%,
-        rgba(243, 106, 120, 0.18) 28%,
-        rgba(255, 155, 85, 0.08) 52%,
+        rgba(201, 52, 155, 0.28) 0%,
+        rgba(243, 106, 120, 0.16) 28%,
+        rgba(255, 155, 85, 0.06) 52%,
         rgba(0, 0, 0, 0) 72%
     );
     pointer-events: none;
     z-index: 0;
-    animation: glowPulse 6s ease-in-out infinite;
+    animation: glowPulse 8s ease-in-out infinite;
 }
 
 @keyframes glowPulse {
     0%, 100% {
-        opacity: 0.55;
-        transform: translate(-50%, -50%) scale(0.96);
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(0.97);
     }
     50% {
-        opacity: 0.9;
-        transform: translate(-50%, -50%) scale(1.04);
+        opacity: 0.82;
+        transform: translate(-50%, -50%) scale(1.03);
+    }
+}
+
+.horizonGlow {
+    display: none;
+}
+
+.gtaTheme .horizonGlow {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 64%;
+    width: 220%;
+    height: 60%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        ellipse at 50% 0%,
+        rgba(255, 180, 85, 0.55) 0%,
+        rgba(255, 155, 85, 0.32) 12%,
+        rgba(243, 106, 120, 0.18) 28%,
+        rgba(201, 52, 155, 0.08) 46%,
+        rgba(0, 0, 0, 0) 68%
+    );
+    pointer-events: none;
+    z-index: 0;
+    animation: horizonBreath 10s ease-in-out infinite, horizonDrift 32s ease-in-out infinite;
+}
+
+@keyframes horizonBreath {
+    0%, 100% {
+        opacity: 0.65;
+    }
+    50% {
+        opacity: 0.92;
+    }
+}
+
+@keyframes horizonDrift {
+    0%, 100% {
+        transform: translate(-50%, -50%) translateY(0);
+    }
+    50% {
+        transform: translate(-50%, -50%) translateY(-14px);
     }
 }
 
@@ -200,6 +219,11 @@
 
 @media (prefers-reduced-motion: reduce) {
     .burst {
+        animation: none;
+    }
+
+    .gtaTheme .glowPulse,
+    .gtaTheme .horizonGlow {
         animation: none;
     }
 }
