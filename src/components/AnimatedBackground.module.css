@@ -115,17 +115,17 @@
     display: block;
     position: absolute;
     left: 50%;
-    top: 64%;
-    width: 220%;
-    height: 60%;
-    transform: translate(-50%, -50%);
+    bottom: 0;
+    width: 260%;
+    height: 100%;
+    transform: translateX(-50%);
     background: radial-gradient(
-        ellipse at 50% 0%,
-        rgba(255, 180, 85, 0.55) 0%,
-        rgba(255, 155, 85, 0.32) 12%,
-        rgba(243, 106, 120, 0.18) 28%,
-        rgba(201, 52, 155, 0.08) 46%,
-        rgba(0, 0, 0, 0) 68%
+        ellipse at 50% 100%,
+        rgba(255, 180, 85, 0.45) 0%,
+        rgba(255, 155, 85, 0.28) 10%,
+        rgba(243, 106, 120, 0.16) 22%,
+        rgba(201, 52, 155, 0.08) 38%,
+        rgba(0, 0, 0, 0) 60%
     );
     pointer-events: none;
     z-index: 0;
@@ -134,19 +134,19 @@
 
 @keyframes horizonBreath {
     0%, 100% {
-        opacity: 0.65;
+        opacity: 0.6;
     }
     50% {
-        opacity: 0.92;
+        opacity: 0.88;
     }
 }
 
 @keyframes horizonDrift {
     0%, 100% {
-        transform: translate(-50%, -50%) translateY(0);
+        transform: translateX(-50%) translateY(0);
     }
     50% {
-        transform: translate(-50%, -50%) translateY(-14px);
+        transform: translateX(-50%) translateY(-10px);
     }
 }
 
