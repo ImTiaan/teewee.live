@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subathon Controller</title>
+  <style>
+    @font-face {
+      font-family: "Block Script";
+      src: url("assets/Block Script.otf") format("opentype");
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    :root {
+      --bg: #07110d;
+      --bg-panel: rgba(11, 29, 24, 0.92);
+      --bg-panel-soft: rgba(17, 44, 36, 0.72);
+      --line: rgba(126, 243, 211, 0.18);
+      --text-main: rgba(247, 250, 249, 0.98);
+      --text-soft: rgba(210, 223, 219, 0.76);
+      --accent: #2ed9b0;
+      --warning: #f5b301;
+      --danger: #ff6c6c;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, rgba(34, 120, 88, 0.22) 0%, rgba(34, 120, 88, 0) 30%),
+        linear-gradient(180deg, #10211b 0%, var(--bg) 100%);
+      color: var(--text-main);
+      font-family: Inter, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    .page {
+      width: min(980px, calc(100vw - 32px));
+      margin: 24px auto 40px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero,
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(17, 44, 36, 0.82) 0%, rgba(7, 18, 14, 0.94) 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--text-soft);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .hero-timer {
+      padding: 18px 20px 20px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: center;
+    }
+
+    .hero-timer-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .hero-timer-value {
+      margin-top: 10px;
+      font-family: "Block Script", "Segoe UI", sans-serif;
+      font-size: clamp(48px, 8vw, 76px);
+      line-height: 0.95;
+      text-shadow:
+        0 0 24px rgba(0, 0, 0, 0.45),
+        0 0 34px rgba(46, 217, 176, 0.14);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .hero-timer-meta {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel-title {
+      margin: 0 0 14px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(4, 10, 8, 0.68);
+      color: var(--text-main);
+      font: inherit;
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 220px;
+      resize: vertical;
+      line-height: 1.5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: rgba(126, 243, 211, 0.52);
+      box-shadow: 0 0 0 3px rgba(126, 243, 211, 0.12);
+    }
+
+    button {
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(126, 243, 211, 0.34);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, rgba(46, 217, 176, 0.22) 0%, rgba(46, 217, 176, 0.14) 100%);
+      border-color: rgba(46, 217, 176, 0.35);
+    }
+
+    button.warning {
+      border-color: rgba(245, 179, 1, 0.22);
+      color: #ffd668;
+    }
+
+    button.danger {
+      border-color: rgba(255, 108, 108, 0.24);
+      color: #ffacac;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--bg-panel-soft);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-label {
+      display: block;
+      margin-top: 6px;
+      color: var(--text-soft);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-line {
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .goal-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      text-align: right;
+    }
+
+    .goal-preview-title {
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .goal-preview-row {
+      display: inline-flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .goal-preview-count,
+    .goal-preview-goal,
+    .goal-preview-separator {
+      font-family: "Block Script", "Segoe UI", sans-serif;
+      font-weight: 400;
+      line-height: 0.92;
+      letter-spacing: 0.02em;
+    }
+
+    .goal-preview-count,
+    .goal-preview-separator {
+      color: var(--text-main);
+    }
+
+    .goal-preview-goal {
+      color: var(--accent);
+    }
+
+    .goal-preview-count,
+    .goal-preview-goal {
+      font-size: clamp(34px, 4vw, 52px);
+    }
+
+    .goal-preview-separator {
+      font-size: clamp(28px, 3vw, 42px);
+    }
+
+    .goal-preview-reward {
+      color: var(--text-soft);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      max-width: 100%;
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .grid-4,
+      .grid-3,
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .page {
+        width: min(100vw - 20px, 980px);
+        margin-top: 10px;
+      }
+
+      .grid-2,
+      .grid-4,
+      .grid-3,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <h1 class="title">Subathon Timer Controller</h1>
+        <p class="subtitle">
+          This is the control window only. It does not belong on stream. Keep your OBS Browser Source pointed at the overlay page and use this page for all timer actions.
+        </p>
+      </div>
+      <div class="hero-timer">
+        <div class="hero-timer-label">Live Timer</div>
+        <div id="heroTimerValue" class="hero-timer-value">06:00:00</div>
+        <div class="hero-timer-meta">
+          <span id="stateChip" class="chip">Connecting</span>
+          <span id="summaryChip" class="chip">Follow +10m / Sub +20m</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Start Settings</h2>
+      <div class="grid-3">
+        <div class="field">
+          <label for="startHours">Hours</label>
+          <input id="startHours" type="number" min="0" max="999" step="1">
+        </div>
+        <div class="field">
+          <label for="startMinutes">Minutes</label>
+          <input id="startMinutes" type="number" min="0" max="59" step="1">
+        </div>
+        <div class="field">
+          <label for="warningMinutes">Warning threshold</label>
+          <input id="warningMinutes" type="number" min="0" max="240" step="1">
+        </div>
+        <div class="field">
+          <label for="startingSubs">Starting subs on reset</label>
+          <input id="startingSubs" type="number" min="0" max="1000000" step="1">
+        </div>
+        <div class="field">
+          <label for="followMinutes">Minutes per follow</label>
+          <input id="followMinutes" type="number" min="0" max="240" step="1">
+        </div>
+        <div class="field">
+          <label for="subMinutes">Minutes per sub</label>
+          <input id="subMinutes" type="number" min="0" max="240" step="1">
+        </div>
+        <div class="field">
+          <label for="timerScale">Overlay timer size</label>
+          <input id="timerScale" type="number" min="0.6" max="1.6" step="0.05">
+        </div>
+        <div class="field">
+          <label for="subGoalTitle">Sub goal title</label>
+          <input id="subGoalTitle" type="text" maxlength="60">
+        </div>
+      </div>
+      <div class="field" style="margin-top: 12px;">
+        <label for="milestones">Sub goal milestones JSON</label>
+        <textarea id="milestones"></textarea>
+      </div>
+      <div class="grid-2" style="margin-top: 12px;">
+        <button id="saveSettingsButton" class="primary" type="button">Save Settings</button>
+        <button id="resetButton" class="danger" type="button">Reset Timer and Totals</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Live Controls</h2>
+      <div class="grid-3">
+        <button id="pauseButton" class="primary" type="button">Pause</button>
+        <button id="followButton" type="button">+1 Follow</button>
+        <button id="applySubsButton" type="button">Add Subs</button>
+      </div>
+      <div class="grid-2" style="margin-top: 12px;">
+        <div class="field">
+          <label for="subsCount">Subs to add</label>
+          <select id="subsCount"></select>
+        </div>
+        <div class="field">
+          <label for="manualMinutes">Manual minutes</label>
+          <input id="manualMinutes" type="number" min="-999" max="999" step="1" value="5">
+        </div>
+      </div>
+      <div class="grid-4" style="margin-top: 12px;">
+        <button type="button" data-minutes="5">+5m</button>
+        <button type="button" data-minutes="10">+10m</button>
+        <button type="button" data-minutes="30">+30m</button>
+        <button type="button" data-minutes="60">+60m</button>
+      </div>
+      <div class="grid-2" style="margin-top: 12px;">
+        <button id="applyMinutesButton" class="warning" type="button">Apply Manual Minutes</button>
+        <div class="status-line" id="statusLine">Waiting for local timer server.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Sub Goal Preview</h2>
+      <div class="goal-preview">
+        <div id="goalPreviewTitle" class="goal-preview-title">Subtember</div>
+        <div class="goal-preview-row">
+          <span id="goalPreviewCurrent" class="goal-preview-count">0</span>
+          <span class="goal-preview-separator">/</span>
+          <span id="goalPreviewGoal" class="goal-preview-goal">35</span>
+        </div>
+        <div id="goalPreviewReward" class="goal-preview-reward">Broforce w Chat</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Session Totals</h2>
+      <div class="stats">
+        <div class="stat-card">
+          <span id="followsStat" class="stat-value">0</span>
+          <span class="stat-label">Follows</span>
+        </div>
+        <div class="stat-card">
+          <span id="subsStat" class="stat-value">0</span>
+          <span class="stat-label">Subs Added</span>
+        </div>
+        <div class="stat-card">
+          <span id="addedStat" class="stat-value">0m</span>
+          <span class="stat-label">Added Time</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const els = {
+      heroTimerValue: document.getElementById("heroTimerValue"),
+      stateChip: document.getElementById("stateChip"),
+      summaryChip: document.getElementById("summaryChip"),
+      startHours: document.getElementById("startHours"),
+      startMinutes: document.getElementById("startMinutes"),
+      warningMinutes: document.getElementById("warningMinutes"),
+      startingSubs: document.getElementById("startingSubs"),
+      followMinutes: document.getElementById("followMinutes"),
+      subMinutes: document.getElementById("subMinutes"),
+      timerScale: document.getElementById("timerScale"),
+      subGoalTitle: document.getElementById("subGoalTitle"),
+      milestones: document.getElementById("milestones"),
+      saveSettingsButton: document.getElementById("saveSettingsButton"),
+      resetButton: document.getElementById("resetButton"),
+      pauseButton: document.getElementById("pauseButton"),
+      followButton: document.getElementById("followButton"),
+      applySubsButton: document.getElementById("applySubsButton"),
+      subsCount: document.getElementById("subsCount"),
+      manualMinutes: document.getElementById("manualMinutes"),
+      applyMinutesButton: document.getElementById("applyMinutesButton"),
+      statusLine: document.getElementById("statusLine"),
+      followsStat: document.getElementById("followsStat"),
+      subsStat: document.getElementById("subsStat"),
+      addedStat: document.getElementById("addedStat"),
+      goalPreviewTitle: document.getElementById("goalPreviewTitle"),
+      goalPreviewCurrent: document.getElementById("goalPreviewCurrent"),
+      goalPreviewGoal: document.getElementById("goalPreviewGoal"),
+      goalPreviewReward: document.getElementById("goalPreviewReward")
+    };
+
+    let latestState = null;
+    let settingsDirty = false;
+
+    const settingsInputs = [
+      els.startHours,
+      els.startMinutes,
+      els.warningMinutes,
+      els.startingSubs,
+      els.followMinutes,
+      els.subMinutes,
+      els.timerScale,
+      els.subGoalTitle,
+      els.milestones
+    ];
+
+    for (let i = 1; i <= 25; i += 1) {
+      const option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = String(i);
+      els.subsCount.appendChild(option);
+    }
+    els.subsCount.value = "1";
+
+    function formatDuration(ms) {
+      const negative = ms < 0;
+      const totalSeconds = Math.floor(Math.abs(ms) / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const padded = [hours, minutes, seconds].map((value, index) => {
+        if (index === 0 && hours > 99) {
+          return String(value);
+        }
+        return String(value).padStart(2, "0");
+      });
+      return negative ? `-${padded.join(":")}` : padded.join(":");
+    }
+
+    function fillInputs(state) {
+      els.startHours.value = String(state.startHours);
+      els.startMinutes.value = String(state.startMinutes);
+      els.warningMinutes.value = String(state.warningMinutes);
+      els.startingSubs.value = String(state.startingSubs || 0);
+      els.followMinutes.value = String(state.followMinutes);
+      els.subMinutes.value = String(state.subMinutes);
+      els.timerScale.value = String(state.timerScale);
+      els.subGoalTitle.value = String(state.subGoalTitle || "Subtember");
+      els.milestones.value = JSON.stringify(state.milestones || [], null, 2);
+    }
+
+    function render(state, options = {}) {
+      latestState = state;
+      els.heroTimerValue.textContent = formatDuration(state.remainingMs);
+      els.stateChip.textContent = state.paused ? "Paused" : (state.remainingMs <= 0 ? "Past Zero" : "Running");
+      els.summaryChip.textContent = `Follow +${state.followMinutes}m / Sub +${state.subMinutes}m`;
+      els.pauseButton.textContent = state.paused ? "Resume" : "Pause";
+      els.followsStat.textContent = String(state.follows);
+      els.subsStat.textContent = String(state.subs);
+      els.addedStat.textContent = `${state.totalAddedMinutes}m`;
+      els.goalPreviewTitle.textContent = state.subGoalTitle || "Subtember";
+      els.goalPreviewCurrent.textContent = String(state.currentSubs || 0);
+      els.goalPreviewGoal.textContent = String((state.activeMilestone && state.activeMilestone.goal) || 0);
+      els.goalPreviewReward.textContent = (state.activeMilestone && state.activeMilestone.label) || "";
+      els.statusLine.textContent = `Connected. Last event: ${state.lastEventMessage || "Timer ready"}`;
+      if (options.forceSettingsSync || !settingsDirty) {
+        fillInputs(state);
+        settingsDirty = false;
+      }
+    }
+
+    async function fetchState() {
+      const response = await fetch("/api/state", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+        render(await response.json());
+    }
+
+    async function postJson(url, payload, options = {}) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      render(await response.json(), options);
+    }
+
+    function readNumber(input, fallback) {
+      const parsed = Number(input.value);
+      return Number.isNaN(parsed) ? fallback : parsed;
+    }
+
+    async function saveSettings() {
+      await postJson("/api/settings", {
+        startHours: Math.max(0, readNumber(els.startHours, latestState ? latestState.startHours : 6)),
+        startMinutes: Math.min(59, Math.max(0, readNumber(els.startMinutes, latestState ? latestState.startMinutes : 0))),
+        warningMinutes: Math.max(0, readNumber(els.warningMinutes, latestState ? latestState.warningMinutes : 30)),
+        startingSubs: Math.max(0, readNumber(els.startingSubs, latestState ? latestState.startingSubs : 0)),
+        followMinutes: Math.max(0, readNumber(els.followMinutes, latestState ? latestState.followMinutes : 10)),
+        subMinutes: Math.max(0, readNumber(els.subMinutes, latestState ? latestState.subMinutes : 20)),
+        timerScale: Math.min(1.6, Math.max(0.6, readNumber(els.timerScale, latestState ? latestState.timerScale : 1))),
+        subGoalTitle: (els.subGoalTitle.value || "").trim() || "Subtember",
+        milestones: els.milestones.value
+      }, { forceSettingsSync: true });
+      els.statusLine.textContent = "Settings saved.";
+    }
+
+    async function sendAction(type, payload = {}) {
+      await postJson("/api/action", { type, ...payload });
+    }
+
+    settingsInputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        settingsDirty = true;
+      });
+    });
+
+    els.saveSettingsButton.addEventListener("click", async () => {
+      try {
+        await saveSettings();
+      } catch (error) {
+        els.statusLine.textContent = `Could not save settings: ${error.message}`;
+      }
+    });
+
+    els.resetButton.addEventListener("click", async () => {
+      const confirmed = window.confirm("Reset the timer and session totals?");
+      if (!confirmed) {
+        return;
+      }
+      try {
+        await sendAction("reset");
+      } catch (error) {
+        els.statusLine.textContent = `Could not reset timer: ${error.message}`;
+      }
+    });
+
+    els.pauseButton.addEventListener("click", async () => {
+      try {
+        await sendAction("pause");
+      } catch (error) {
+        els.statusLine.textContent = `Could not change timer state: ${error.message}`;
+      }
+    });
+
+    els.followButton.addEventListener("click", async () => {
+      try {
+        await sendAction("follow");
+      } catch (error) {
+        els.statusLine.textContent = `Could not add follow: ${error.message}`;
+      }
+    });
+
+    els.applySubsButton.addEventListener("click", async () => {
+      try {
+        await sendAction("subs", { count: Number(els.subsCount.value) || 1 });
+      } catch (error) {
+        els.statusLine.textContent = `Could not add subs: ${error.message}`;
+      }
+    });
+
+    els.applyMinutesButton.addEventListener("click", async () => {
+      try {
+        await sendAction("minutes", { minutes: readNumber(els.manualMinutes, 5) });
+      } catch (error) {
+        els.statusLine.textContent = `Could not add minutes: ${error.message}`;
+      }
+    });
+
+    document.querySelectorAll("[data-minutes]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        try {
+          await sendAction("minutes", { minutes: Number(button.getAttribute("data-minutes")) || 0 });
+        } catch (error) {
+          els.statusLine.textContent = `Could not add minutes: ${error.message}`;
+        }
+      });
+    });
+
+    async function poll() {
+      try {
+        await fetchState();
+      } catch (error) {
+        els.statusLine.textContent = `Server offline: ${error.message}`;
+      }
+    }
+
+    poll();
+    window.setInterval(poll, 500);
+  </script>
+</body>
+</html>

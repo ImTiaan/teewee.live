@@ -29,6 +29,35 @@
     --grain-opacity: 0.05;
 }
 
+.gtaTheme {
+    --background-base: #1a0a2e;
+    --background-glow: radial-gradient(
+        circle at 50% 38%,
+        rgba(201, 52, 155, 0.22) 0%,
+        rgba(243, 106, 120, 0.12) 34%,
+        rgba(0, 0, 0, 0) 70%
+    );
+    --sunset-gradient: linear-gradient(
+        180deg,
+        #2a0e4a 0%,
+        #3B146B 18%,
+        #7B208F 38%,
+        #C9349B 56%,
+        #F36A78 74%,
+        #F87572 86%,
+        #FF9B55 100%
+    );
+    --burst-colour: rgba(201, 52, 155, 0.7);
+    --grain-opacity: 0.06;
+}
+
+.gtaTheme.container {
+    background:
+        var(--background-glow),
+        var(--sunset-gradient),
+        var(--background-base);
+}
+
 :global(:root) {
     --teewee-spin-duration: 120s;
 }
@@ -57,6 +86,21 @@
     mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 170px, rgba(0, 0, 0, 1) 171px 100%);
     -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 170px, rgba(0, 0, 0, 1) 171px 100%);
     animation: spin var(--teewee-spin-duration) linear infinite;
+}
+
+.gtaTheme .burst {
+    opacity: 0.18;
+    background: repeating-conic-gradient(
+        from -6deg,
+        #C9349B 0deg 10deg,
+        transparent 10deg 17deg,
+        #F36A78 17deg 27deg,
+        transparent 27deg 34deg,
+        #FF9B55 34deg 44deg,
+        transparent 44deg 51deg,
+        #FFB455 51deg 61deg,
+        transparent 61deg 68deg
+    );
 }
 
 .container::after {

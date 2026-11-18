@@ -1,0 +1,1057 @@
+StreamElements Custom Widget – Teewee Notch Alerts (Draft)
+
+Replacement for the existing centre-screen dramatic alerts. Designed to sit in
+the same exact top-centred position as the "fully down" notch overlay, using
+the same physical dimensions (520 x 74 px) and the same ease, but without
+the notch pill chrome.
+
+Differences vs. the existing alltypes draft:
+- Same total hold duration by default (6200 ms) so alerts feel identical in
+  terms of how long a name stays on screen.
+- No pill, no background, no rays — just the icon + Block Script headline.
+- Correct SVG per alert type, pulled from teewee.live/screens/assets.
+- One shared sound for every event type: the follow.wav sound.
+- One dedupe/queue engine per event family so gifted sub spam matches the
+  recipient-style alert contract you settled on earlier.
+
+Paste each block into the matching StreamElements Custom Widget tab:
+- Fields
+- HTML
+- CSS
+- JS
+- Data
+
+--------------------------------------------
+FIELDS (paste into the Fields tab)
+--------------------------------------------
+
+{
+  "widgetName": {
+    "type": "text",
+    "label": "Widget Name",
+    "value": "Teewee Notch Alerts"
+  },
+  "widgetAuthor": {
+    "type": "text",
+    "label": "Author",
+    "value": "teewee"
+  },
+  "displayDuration": {
+    "type": "number",
+    "label": "Alert Duration (ms)",
+    "value": 6200,
+    "min": 3000,
+    "max": 15000,
+    "step": 100
+  },
+  "iconOffsetTopPx": {
+    "type": "number",
+    "label": "Final Notch Offset (top px)",
+    "value": 18,
+    "min": 0,
+    "max": 200,
+    "step": 1
+  },
+  "soundVolume": {
+    "type": "number",
+    "label": "Sound Volume (0-100)",
+    "value": 85,
+    "min": 0,
+    "max": 100,
+    "step": 1
+  },
+  "soundUrl": {
+    "type": "text",
+    "label": "Sound URL (all alerts)",
+    "value": "https://teewee.live/sounds/follow.wav"
+  },
+  "iconFollow": {
+    "type": "text",
+    "label": "Icon URL: Follow",
+    "value": "https://teewee.live/screens/assets/Follow.svg"
+  },
+  "iconSubscribed": {
+    "type": "text",
+    "label": "Icon URL: Subscribe Regular",
+    "value": "https://teewee.live/screens/assets/Subscribe_Regular.svg"
+  },
+  "iconPrimeSub": {
+    "type": "text",
+    "label": "Icon URL: Prime Sub",
+    "value": "https://teewee.live/screens/assets/Prime.svg"
+  },
+  "iconGiftedSubs": {
+    "type": "text",
+    "label": "Icon URL: Gifted Subs",
+    "value": "https://teewee.live/screens/assets/Gifted.svg"
+  },
+  "iconBits": {
+    "type": "text",
+    "label": "Icon URL: Bits (cheer)",
+    "value": "https://teewee.live/screens/assets/Follow.svg"
+  },
+  "iconRaid": {
+    "type": "text",
+    "label": "Icon URL: Raid",
+    "value": "https://teewee.live/screens/assets/Raid.svg"
+  },
+  "iconHypeTrain": {
+    "type": "text",
+    "label": "Icon URL: Hype Train",
+    "value": "https://teewee.live/screens/assets/Hype.svg"
+  },
+  "accentFollow": {
+    "type": "colorpicker",
+    "label": "Glow Colour: Follow",
+    "value": "#053F33"
+  },
+  "accentBits": {
+    "type": "colorpicker",
+    "label": "Glow Colour: Bits",
+    "value": "#F5B301"
+  },
+  "accentSubscribed": {
+    "type": "colorpicker",
+    "label": "Glow Colour: Subscribe Regular",
+    "value": "#04473C"
+  },
+  "accentPrimeSub": {
+    "type": "colorpicker",
+    "label": "Glow Colour: Prime Sub",
+    "value": "#00A8E1"
+  },
+  "accentGiftedSubs": {
+    "type": "colorpicker",
+    "label": "Glow Colour: Gifted Subs",
+    "value": "#2ED9B0"
+  },
+  "accentRaid": {
+    "type": "colorpicker",
+    "label": "Glow Colour: Raid",
+    "value": "#C0CBD1"
+  },
+  "accentHypeTrain": {
+    "type": "colorpicker",
+    "label": "Glow Colour: Hype Train",
+    "value": "#9146FF"
+  },
+  "debugMode": {
+    "type": "checkbox",
+    "label": "Debug Mode (logs payloads)",
+    "value": false
+  }
+}
+
+--------------------------------------------
+HTML (paste into the HTML tab)
+--------------------------------------------
+
+<div id="se-root" class="se-root">
+  <div id="alert" class="alert" data-type="follow">
+    <div class="row">
+      <img
+        id="icon"
+        class="icon"
+        src="https://teewee.live/screens/assets/Follow.svg"
+        alt="Alert icon"
+      />
+      <h1 id="headline" class="headline">Someone just followed</h1>
+    </div>
+  </div>
+
+  <div id="test-panel" class="test-panel" hidden>
+    <button type="button" data-test="follow">Test Follow</button>
+    <button type="button" data-test="subscribed">Test Sub</button>
+    <button type="button" data-test="prime-sub">Test Prime</button>
+    <button type="button" data-test="gifted-subs">Test Gifted</button>
+    <button type="button" data-test="bits">Test 500 Bits</button>
+    <button type="button" data-test="raid">Test Raid</button>
+    <button type="button" data-test="hypetrain">Test Hype Train</button>
+  </div>
+</div>
+
+--------------------------------------------
+CSS (paste into the CSS tab)
+--------------------------------------------
+
+@font-face {
+  font-family: 'Block Script';
+  src: url('https://www.teewee.live/screens/assets/Block%20Script.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --alert-duration: 6200ms;
+  --notch-offset-top: 18px;
+  --notch-width: 520px;
+  --notch-height: 74px;
+
+  --text: rgba(246, 248, 247, 0.96);
+  --text-shadow-deep: rgba(7, 31, 26, 0.72);
+  --text-shadow-soft: rgba(0, 0, 0, 0.3);
+
+  --accent-follow: #053F33;
+  --accent-bits: #F5B301;
+  --accent-subscribed: #04473C;
+  --accent-prime-sub: #00A8E1;
+  --accent-gifted-subs: #2ED9B0;
+  --accent-raid: #C0CBD1;
+  --accent-hypetrain: #9146FF;
+
+  --glow-follow: rgba(5, 63, 51, 0.32);
+  --glow-bits: rgba(245, 179, 1, 0.32);
+  --glow-subscribed: rgba(4, 71, 60, 0.32);
+  --glow-prime-sub: rgba(0, 168, 225, 0.32);
+  --glow-gifted-subs: rgba(46, 217, 176, 0.34);
+  --glow-raid: rgba(192, 203, 209, 0.28);
+  --glow-hypetrain: rgba(145, 70, 255, 0.34);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.se-root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+}
+
+.alert {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, calc(-1 * (var(--notch-height) + 60px)));
+  opacity: 0;
+  width: var(--notch-width);
+  height: var(--notch-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.45));
+  transition: transform 780ms cubic-bezier(0.16, 1, 0.3, 1), opacity 520ms ease;
+  will-change: transform, opacity;
+}
+
+.alert.is-active {
+  transform: translate(-50%, var(--notch-offset-top));
+  opacity: 1;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+  padding: 0 28px;
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.alert.is-active .row {
+  animation: rowFade var(--alert-duration) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.icon {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  display: block;
+  filter: drop-shadow(0 2px 0 var(--text-shadow-deep)) drop-shadow(0 0 12px var(--icon-glow, var(--glow-follow)));
+}
+
+.headline {
+  margin: 0;
+  max-width: 420px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text);
+  font-family: 'Block Script', 'Segoe UI', sans-serif;
+  font-size: 2.55rem;
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  -webkit-text-stroke: 0.26px rgba(255, 255, 255, 0.62);
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.2),
+    0 4px 0 var(--text-shadow-deep),
+    0 0 18px var(--text-shadow-soft);
+}
+
+.alert[data-type="follow"] {
+  --icon-solid: var(--accent-follow);
+  --icon-glow: var(--glow-follow);
+}
+
+.alert[data-type="bits"] {
+  --icon-solid: var(--accent-bits);
+  --icon-glow: var(--glow-bits);
+}
+
+.alert[data-type="subscribed"] {
+  --icon-solid: var(--accent-subscribed);
+  --icon-glow: var(--glow-subscribed);
+}
+
+.alert[data-type="prime-sub"] {
+  --icon-solid: var(--accent-prime-sub);
+  --icon-glow: var(--glow-prime-sub);
+}
+
+.alert[data-type="gifted-subs"] {
+  --icon-solid: var(--accent-gifted-subs);
+  --icon-glow: var(--glow-gifted-subs);
+}
+
+.alert[data-type="raid"] {
+  --icon-solid: var(--accent-raid);
+  --icon-glow: var(--glow-raid);
+}
+
+.alert[data-type="hypetrain"] {
+  --icon-solid: var(--accent-hypetrain);
+  --icon-glow: var(--glow-hypetrain);
+}
+
+@keyframes rowFade {
+  0% {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  12% {
+    opacity: 0.65;
+    transform: translateY(3px);
+  }
+  22% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  84% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.test-panel {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: min(640px, calc(100vw - 48px));
+  pointer-events: auto;
+  z-index: 20;
+}
+
+.test-panel[hidden] {
+  display: none;
+}
+
+.test-panel button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 8px 12px;
+  border-radius: 9999px;
+  font: 600 12px/1 'Segoe UI', system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --notch-width: min(92vw, 520px);
+    --notch-height: 64px;
+  }
+
+  .headline {
+    font-size: 1.9rem;
+    max-width: calc(100% - 64px);
+  }
+
+  .icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert {
+    transition: opacity 200ms ease;
+  }
+
+  .alert.is-active {
+    transform: translate(-50%, var(--notch-offset-top));
+  }
+
+  .row {
+    animation: none;
+  }
+}
+
+--------------------------------------------
+JS (paste into the JS tab)
+--------------------------------------------
+
+const state = {
+  queue: [],
+  active: false,
+  duration: 6200,
+  debugMode: false,
+  soundVolume: 0.85,
+  soundUrl: 'https://teewee.live/sounds/follow.wav',
+  notchOffsetTop: 18,
+  iconUrls: {
+    follow: '',
+    bits: '',
+    subscribed: '',
+    'prime-sub': '',
+    'gifted-subs': '',
+    raid: '',
+    hypetrain: ''
+  },
+  fingerprints: new Map(),
+  hypetrainActive: null,
+  hypetrainLevel: null,
+  giftBulkAt: 0,
+  giftBulkSender: '',
+  giftBulkCount: 0
+};
+
+const els = {};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function cacheEls() {
+  els.alert = $('alert');
+  els.row = els.alert ? els.alert.querySelector('.row') : null;
+  els.icon = $('icon');
+  els.headline = $('headline');
+  els.testPanel = $('test-panel');
+}
+
+function logDebug(label, value) {
+  if (!state.debugMode) return;
+  console.log(`[Teewee Notch Alerts] ${label}`, value);
+}
+
+function setCssVar(name, value) {
+  if (value === undefined || value === null || value === '') return;
+  document.documentElement.style.setProperty(name, value);
+}
+
+function rgbToRgbaString(hex, alpha) {
+  const clean = String(hex || '').replace('#', '').trim();
+  if (clean.length !== 3 && clean.length !== 6) return '';
+  const full = clean.length === 3
+    ? clean.split('').map((c) => c + c).join('')
+    : clean;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  if (![r, g, b].every(Number.isFinite)) return '';
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function applyFieldData(fieldData) {
+  if (!fieldData) return;
+
+  state.duration = Number(fieldData.displayDuration) || 6200;
+  state.debugMode = Boolean(fieldData.debugMode);
+  state.soundVolume = Math.min(1, Math.max(0, Number(fieldData.soundVolume) / 100 || 0));
+  state.soundUrl = (fieldData.soundUrl || '').trim() || 'https://teewee.live/sounds/follow.wav';
+  state.notchOffsetTop = Number.isFinite(Number(fieldData.iconOffsetTopPx))
+    ? Number(fieldData.iconOffsetTopPx)
+    : 18;
+
+  state.iconUrls.follow = (fieldData.iconFollow || '').trim();
+  state.iconUrls.bits = (fieldData.iconBits || '').trim();
+  state.iconUrls.subscribed = (fieldData.iconSubscribed || '').trim();
+  state.iconUrls['prime-sub'] = (fieldData.iconPrimeSub || '').trim();
+  state.iconUrls['gifted-subs'] = (fieldData.iconGiftedSubs || '').trim();
+  state.iconUrls.raid = (fieldData.iconRaid || '').trim();
+  state.iconUrls.hypetrain = (fieldData.iconHypeTrain || '').trim();
+
+  setCssVar('--alert-duration', `${state.duration}ms`);
+  setCssVar('--notch-offset-top', `${state.notchOffsetTop}px`);
+
+  if (fieldData.accentFollow) {
+    setCssVar('--accent-follow', String(fieldData.accentFollow));
+    setCssVar('--glow-follow', rgbToRgbaString(fieldData.accentFollow, 0.32));
+  }
+  if (fieldData.accentBits) {
+    setCssVar('--accent-bits', String(fieldData.accentBits));
+    setCssVar('--glow-bits', rgbToRgbaString(fieldData.accentBits, 0.32));
+  }
+  if (fieldData.accentSubscribed) {
+    setCssVar('--accent-subscribed', String(fieldData.accentSubscribed));
+    setCssVar('--glow-subscribed', rgbToRgbaString(fieldData.accentSubscribed, 0.32));
+  }
+  if (fieldData.accentPrimeSub) {
+    setCssVar('--accent-prime-sub', String(fieldData.accentPrimeSub));
+    setCssVar('--glow-prime-sub', rgbToRgbaString(fieldData.accentPrimeSub, 0.32));
+  }
+  if (fieldData.accentGiftedSubs) {
+    setCssVar('--accent-gifted-subs', String(fieldData.accentGiftedSubs));
+    setCssVar('--glow-gifted-subs', rgbToRgbaString(fieldData.accentGiftedSubs, 0.34));
+  }
+  if (fieldData.accentRaid) {
+    setCssVar('--accent-raid', String(fieldData.accentRaid));
+    setCssVar('--glow-raid', rgbToRgbaString(fieldData.accentRaid, 0.28));
+  }
+  if (fieldData.accentHypeTrain) {
+    setCssVar('--accent-hypetrain', String(fieldData.accentHypeTrain));
+    setCssVar('--glow-hypetrain', rgbToRgbaString(fieldData.accentHypeTrain, 0.34));
+  }
+
+  if (els.testPanel) {
+    els.testPanel.hidden = !state.debugMode;
+  }
+}
+
+function playSoundOnce(url) {
+  if (!url) return;
+  try {
+    const audio = new Audio(url);
+    audio.volume = state.soundVolume;
+    audio.preload = 'auto';
+    const playAttempt = audio.play();
+    if (playAttempt && typeof playAttempt.catch === 'function') {
+      playAttempt.catch((error) => logDebug('Sound play failed', { url, error }));
+    }
+  } catch (error) {
+    logDebug('Sound init failed', { url, error });
+  }
+}
+
+function playSoundForAlert() {
+  playSoundOnce(state.soundUrl);
+}
+
+function normaliseDetail(detail) {
+  const event = detail && typeof detail.event === 'object' ? detail.event : {};
+  const eventData = event && typeof event.data === 'object' ? event.data : {};
+
+  const mergedData = {
+    ...(event || {}),
+    ...(eventData || {})
+  };
+
+  return {
+    listener: detail && detail.listener ? detail.listener : '',
+    event,
+    data: mergedData
+  };
+}
+
+function resolveString(payload, keys, fallback = '') {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return fallback;
+}
+
+function resolveNumber(payload, keys, fallback = 0) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function resolveBoolean(payload, keys, fallback = false) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  for (const key of keys) {
+    const value = data[key] ?? event[key];
+    if (typeof value === 'boolean') return value;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+  }
+  return fallback;
+}
+
+function resolveUsername(payload, fallback = 'Someone') {
+  return resolveString(
+    payload,
+    ['name', 'username', 'displayName', 'display_name', 'userName', 'senderName'],
+    ''
+  ) || fallback;
+}
+
+function resolveAmountInt(payload, fallback = 1) {
+  const n = resolveNumber(payload, ['amount', 'count', 'months', 'viewers'], NaN);
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return fallback;
+}
+
+function looksPrime(payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  const candidates = [
+    data.isPrime,
+    data.prime,
+    data.plan,
+    data.planName,
+    data.subPlan,
+    data.subscriptionPlan,
+    data.tier,
+    data.message,
+    event.isPrime,
+    event.prime,
+    event.plan,
+    event.planName,
+    event.subPlan,
+    event.subscriptionPlan,
+    event.tier,
+    event.message
+  ];
+
+  return candidates.some((value) => {
+    if (value === true) return true;
+    if (typeof value !== 'string' && typeof value !== 'number') return false;
+    return String(value).toLowerCase().includes('prime');
+  });
+}
+
+function isGiftDerivedSubscriberEvent(listener, payload) {
+  if (listener === 'subscriber-gifted-latest') return false;
+
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  return Boolean(
+    data.sender ||
+      data.gifted ||
+      data.isGift ||
+      data.isGifted ||
+      data.bulkGifted ||
+      event.sender ||
+      event.gifted ||
+      event.isGift ||
+      event.isGifted ||
+      event.bulkGifted
+  );
+}
+
+function cleanupFingerprints() {
+  const now = Date.now();
+  for (const [key, timestamp] of state.fingerprints.entries()) {
+    if (now - timestamp > 8000) {
+      state.fingerprints.delete(key);
+    }
+  }
+}
+
+function buildFingerprint(listener, payload) {
+  const data = payload && payload.data ? payload.data : {};
+  const event = payload && payload.event ? payload.event : {};
+
+  const parts = [
+    listener,
+    data._id,
+    data.id,
+    data.name,
+    data.username,
+    data.displayName,
+    data.sender,
+    data.gifted,
+    data.amount,
+    data.tier,
+    data.level,
+    data.active,
+    data.levelChanged,
+    data.message,
+    data.createdAt,
+    event._id,
+    event.id
+  ];
+
+  return parts
+    .filter((part) => part !== undefined && part !== null && part !== '')
+    .join('|');
+}
+
+function isDuplicateEvent(listener, payload) {
+  cleanupFingerprints();
+
+  const fingerprint = buildFingerprint(listener, payload);
+  if (!fingerprint) return false;
+
+  const now = Date.now();
+  const previous = state.fingerprints.get(fingerprint);
+
+  state.fingerprints.set(fingerprint, now);
+
+  if (!previous) return false;
+  return now - previous < 3000;
+}
+
+function buildHypeTrainAlert(payload) {
+  const active = resolveBoolean(payload, ['active'], false);
+  const level = resolveNumber(payload, ['level'], 0);
+  const levelChanged = resolveBoolean(payload, ['levelChanged', 'level_changed'], false);
+
+  const prevActive = state.hypetrainActive;
+  const prevLevel = state.hypetrainLevel;
+
+  state.hypetrainActive = active;
+  state.hypetrainLevel = level || prevLevel;
+
+  if (active === true && prevActive !== true) {
+    return {
+      type: 'hypetrain',
+      headline: 'Hype Train started'
+    };
+  }
+
+  if (
+    active === true &&
+    (levelChanged === true || (Number.isFinite(level) && level > (prevLevel || 0)))
+  ) {
+    const displayLevel = Number.isFinite(level) && level > 0 ? level : prevLevel || 1;
+    return {
+      type: 'hypetrain',
+      headline: `Hype Train level ${displayLevel}`
+    };
+  }
+
+  if (active === false && prevActive === true) {
+    return {
+      type: 'hypetrain',
+      headline: 'Hype Train ended'
+    };
+  }
+
+  return null;
+}
+
+function buildAlert(listener, payload) {
+  const username = resolveUsername(payload);
+
+  if (listener === 'follower-latest') {
+    return {
+      type: 'follow',
+      headline: `${username} just followed`
+    };
+  }
+
+  if (listener === 'cheer-latest') {
+    const amount = resolveAmountInt(payload, 100);
+    return {
+      type: 'bits',
+      headline: `${username} cheered ${amount} bits`
+    };
+  }
+
+  if (listener === 'subscriber-gifted-latest') {
+    const amount = resolveAmountInt(payload, 1);
+    state.giftBulkAt = Date.now();
+    state.giftBulkSender = username;
+    state.giftBulkCount = amount;
+    return null;
+  }
+
+  if (
+    listener === 'subscriber-latest' ||
+    listener === 'subscriber-new-latest' ||
+    listener === 'subscriber-resub-latest'
+  ) {
+    if (isGiftDerivedSubscriberEvent(listener, payload)) {
+      const gifter = resolveString(payload, ['sender', 'senderName'], '');
+      const recipient = resolveString(payload, ['gifted', 'name'], '');
+      const now = Date.now();
+      const gifterFallback =
+        state.giftBulkAt && now - state.giftBulkAt < 12000 ? state.giftBulkSender : '';
+
+      const finalGifter = gifter || gifterFallback;
+      const finalRecipient = recipient || username;
+
+      if (!finalGifter || !finalRecipient) return null;
+
+      return {
+        type: 'gifted-subs',
+        headline: `${finalRecipient} received a gifted sub from ${finalGifter}`
+      };
+    }
+
+    if (looksPrime(payload)) {
+      return {
+        type: 'prime-sub',
+        headline: `${username} subscribed with Prime`
+      };
+    }
+
+    return {
+      type: 'subscribed',
+      headline: `${username} just subscribed`
+    };
+  }
+
+  if (listener === 'raid-latest') {
+    const amount = resolveAmountInt(payload, 1);
+    return {
+      type: 'raid',
+      headline: `${username} raided with ${amount} viewers`
+    };
+  }
+
+  if (listener === 'hypetrain-latest') {
+    return buildHypeTrainAlert(payload);
+  }
+
+  return null;
+}
+
+function renderAlert(alert) {
+  if (els.alert) els.alert.dataset.type = alert.type;
+  if (els.headline) els.headline.textContent = alert.headline;
+  if (!els.icon) return;
+
+  const iconUrl = state.iconUrls[alert.type] || state.iconUrls.follow;
+  if (!iconUrl) {
+    els.icon.style.display = 'none';
+    return;
+  }
+  els.icon.style.display = '';
+  els.icon.src = iconUrl;
+}
+
+function hideAlert() {
+  els.alert.classList.remove('is-active');
+}
+
+function resetRowAnimation() {
+  if (!els.row) return;
+  els.row.style.animation = 'none';
+  els.row.style.opacity = '0';
+  els.row.style.transform = 'translateY(6px)';
+  void els.row.offsetWidth;
+  els.row.style.animation = '';
+  els.row.style.opacity = '';
+  els.row.style.transform = '';
+}
+
+function playNext() {
+  if (state.active) return;
+
+  const next = state.queue.shift();
+  if (!next) return;
+
+  state.active = true;
+  renderAlert(next);
+  playSoundForAlert();
+
+  hideAlert();
+  resetRowAnimation();
+  void els.alert.offsetWidth;
+  els.alert.classList.add('is-active');
+
+  const fadeAt = Math.max(0, state.duration - 350);
+
+  window.setTimeout(() => {
+    hideAlert();
+  }, fadeAt);
+
+  window.setTimeout(() => {
+    state.active = false;
+    playNext();
+  }, state.duration);
+}
+
+function enqueueAlert(alert) {
+  if (!alert) return;
+  state.queue.push(alert);
+  playNext();
+}
+
+function handleIncoming(detail) {
+  const payload = normaliseDetail(detail);
+  const listener = payload.listener;
+
+  window.TeeweeNotchAlertsLastEvent = detail;
+  logDebug('Incoming detail', detail);
+  logDebug('Normalised payload', payload);
+
+  const supported = [
+    'follower-latest',
+    'cheer-latest',
+    'subscriber-latest',
+    'subscriber-new-latest',
+    'subscriber-resub-latest',
+    'subscriber-gifted-latest',
+    'raid-latest',
+    'hypetrain-latest'
+  ];
+
+  if (!listener) return;
+  if (!supported.includes(listener)) return;
+  if (isDuplicateEvent(listener, payload)) {
+    logDebug('Skipped duplicate event', { listener, payload });
+    return;
+  }
+
+  const alert = buildAlert(listener, payload);
+
+  if (!alert) {
+    logDebug('Skipped event after buildAlert', { listener, payload });
+    return;
+  }
+
+  logDebug('Built alert', alert);
+  enqueueAlert(alert);
+}
+
+function getTestPayload(type) {
+  const samples = {
+    follow: {
+      listener: 'follower-latest',
+      event: { data: { name: 'Bobby' } }
+    },
+    bits: {
+      listener: 'cheer-latest',
+      event: { data: { name: 'Bobby', amount: 500 } }
+    },
+    subscribed: {
+      listener: 'subscriber-latest',
+      event: { data: { name: 'Bobby', amount: 1, tier: '1000' } }
+    },
+    'prime-sub': {
+      listener: 'subscriber-latest',
+      event: { data: { name: 'Bobby', amount: 1, tier: 'prime' } }
+    },
+    'gifted-subs': {
+      listener: 'subscriber-latest',
+      event: {
+        data: {
+          name: 'Alice',
+          sender: 'Bobby',
+          gifted: 'Alice',
+          amount: 1,
+          tier: '1000'
+        }
+      }
+    },
+    raid: {
+      listener: 'raid-latest',
+      event: { data: { name: 'Bobby', amount: 123 } }
+    },
+    hypetrain: {
+      listener: 'hypetrain-latest',
+      event: { data: { active: true, level: 2, levelChanged: true } }
+    }
+  };
+
+  return samples[type] || samples.follow;
+}
+
+window.addEventListener('onWidgetLoad', function (obj) {
+  cacheEls();
+  applyFieldData((obj.detail && obj.detail.fieldData) || {});
+  logDebug('Widget loaded', obj);
+
+  if (els.headline && document.fonts && typeof document.fonts.ready === 'object' && typeof document.fonts.ready.then === 'function') {
+    document.fonts.ready.then(function () {
+      if (els.headline) {
+        els.headline.style.display = 'none';
+        void els.headline.offsetWidth;
+        els.headline.style.display = '';
+      }
+    }).catch(function () {});
+  }
+
+  if (els.testPanel) {
+    els.testPanel.addEventListener('click', function (event) {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const type = target.getAttribute('data-test');
+      if (!type) return;
+      handleIncoming(getTestPayload(type));
+    });
+  }
+
+  window.TeeweeNotchAlertsTest = function (type) {
+    handleIncoming(getTestPayload(type));
+  };
+});
+
+window.addEventListener('onEventReceived', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleIncoming(obj.detail);
+});
+
+window.addEventListener('onSessionUpdate', function (obj) {
+  if (!obj || !obj.detail) return;
+  handleIncoming(obj.detail);
+});
+
+--------------------------------------------
+DATA (paste into the Data tab for completeness, optional)
+--------------------------------------------
+
+{
+  "eventsLimit": 5,
+  "includeFollowers": "yes",
+  "includeSubs": "yes",
+  "includeCheers": "yes",
+  "minCheer": 1,
+  "includeRaids": "yes",
+  "includeHypetrain": "yes",
+  "widgetName": "Teewee Notch Alerts",
+  "widgetAuthor": "teewee",
+  "displayDuration": 6200,
+  "iconOffsetTopPx": 18,
+  "soundVolume": 85,
+  "soundUrl": "https://teewee.live/sounds/follow.wav",
+  "iconFollow": "https://teewee.live/screens/assets/Follow.svg",
+  "iconSubscribed": "https://teewee.live/screens/assets/Subscribe_Regular.svg",
+  "iconPrimeSub": "https://teewee.live/screens/assets/Prime.svg",
+  "iconGiftedSubs": "https://teewee.live/screens/assets/Gifted.svg",
+  "iconBits": "https://teewee.live/screens/assets/Follow.svg",
+  "iconRaid": "https://teewee.live/screens/assets/Raid.svg",
+  "iconHypeTrain": "https://teewee.live/screens/assets/Hype.svg",
+  "accentFollow": "#053F33",
+  "accentBits": "#F5B301",
+  "accentSubscribed": "#04473C",
+  "accentPrimeSub": "#00A8E1",
+  "accentGiftedSubs": "#2ED9B0",
+  "accentRaid": "#C0CBD1",
+  "accentHypeTrain": "#9146FF",
+  "debugMode": false
+}

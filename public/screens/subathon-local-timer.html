@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Subathon Timer</title>
+  <style>
+    @font-face {
+      font-family: "Block Script";
+      src: url("assets/Block Script.otf") format("opentype");
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    :root {
+      --bg-panel: rgba(6, 16, 13, 0.82);
+      --bg-panel-soft: rgba(11, 29, 24, 0.72);
+      --line: rgba(60, 142, 108, 0.55);
+      --line-bright: rgba(113, 226, 177, 0.92);
+      --text-main: rgba(247, 250, 249, 0.98);
+      --text-soft: rgba(210, 223, 219, 0.76);
+      --accent: #2ed9b0;
+      --accent-strong: #7ef3d3;
+      --warning: #f5b301;
+      --danger: #ff6c6c;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+      --timer-scale: 1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: transparent;
+      color: var(--text-main);
+      font-family: Inter, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      position: relative;
+    }
+
+    .screen-shell {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .screen-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 100%, rgba(34, 120, 88, 0.18) 0%, rgba(34, 120, 88, 0) 34%),
+        linear-gradient(180deg, rgba(5, 16, 12, 0.08) 0%, rgba(5, 16, 12, 0) 35%);
+      pointer-events: none;
+    }
+
+    .controls-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 20;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid rgba(126, 243, 211, 0.2);
+      border-radius: 999px;
+      background: rgba(4, 10, 8, 0.72);
+      backdrop-filter: blur(12px);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .controls-toggle:hover {
+      border-color: rgba(126, 243, 211, 0.42);
+    }
+
+    .controls-panel {
+      position: fixed;
+      top: 72px;
+      left: 20px;
+      z-index: 20;
+      width: min(380px, calc(100vw - 40px));
+      max-height: calc(100vh - 100px);
+      overflow: auto;
+      padding: 18px;
+      border: 1px solid rgba(126, 243, 211, 0.16);
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(17, 44, 36, 0.78) 0%, rgba(7, 18, 14, 0.9) 100%);
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .controls-panel.is-hidden {
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .panel-subtitle {
+      margin: 6px 0 0;
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .status-pill {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(126, 243, 211, 0.2);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+    }
+
+    .status-pill.paused {
+      color: var(--warning);
+      border-color: rgba(245, 179, 1, 0.28);
+    }
+
+    .status-pill.finished {
+      color: var(--danger);
+      border-color: rgba(255, 108, 108, 0.3);
+    }
+
+    .panel-section + .panel-section {
+      margin-top: 16px;
+    }
+
+    .section-card {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
+    }
+
+    .section-label {
+      margin: 0 0 12px;
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field-grid.one-column {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 40px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      background: rgba(4, 10, 8, 0.65);
+      color: var(--text-main);
+      font: inherit;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(126, 243, 211, 0.62);
+      box-shadow: 0 0 0 3px rgba(126, 243, 211, 0.12);
+    }
+
+    .button-row,
+    .button-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .button-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .button-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    button {
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(126, 243, 211, 0.34);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, rgba(46, 217, 176, 0.22) 0%, rgba(46, 217, 176, 0.14) 100%);
+      border-color: rgba(46, 217, 176, 0.35);
+    }
+
+    button.warning {
+      border-color: rgba(245, 179, 1, 0.22);
+      color: #ffd668;
+    }
+
+    button.danger {
+      border-color: rgba(255, 108, 108, 0.22);
+      color: #ff9b9b;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-card {
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--bg-panel-soft);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-label {
+      display: block;
+      margin-top: 6px;
+      color: var(--text-soft);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .shortcut-note,
+    .helper-text {
+      margin: 10px 0 0;
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .quick-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .timer-stage {
+      position: fixed;
+      left: 50%;
+      bottom: 36px;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: min(92vw, 860px);
+      pointer-events: none;
+    }
+
+    .event-banner {
+      min-height: 26px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(5, 14, 10, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .event-banner.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .timer-shell {
+      width: 100%;
+      padding: 16px 26px 18px;
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, rgba(18, 37, 31, 0.9) 0%, rgba(7, 16, 13, 0.95) 100%);
+      border: 1px solid rgba(126, 243, 211, 0.2);
+      box-shadow:
+        0 14px 46px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .timer-shell.warning {
+      border-color: rgba(245, 179, 1, 0.45);
+      box-shadow:
+        0 14px 46px rgba(0, 0, 0, 0.35),
+        0 0 32px rgba(245, 179, 1, 0.16);
+    }
+
+    .timer-shell.danger {
+      border-color: rgba(255, 108, 108, 0.48);
+      box-shadow:
+        0 14px 46px rgba(0, 0, 0, 0.35),
+        0 0 34px rgba(255, 108, 108, 0.18);
+    }
+
+    .timer-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .timer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(46, 217, 176, 0.7);
+    }
+
+    .timer-dot.paused {
+      background: var(--warning);
+      box-shadow: 0 0 14px rgba(245, 179, 1, 0.7);
+    }
+
+    .timer-display {
+      font-family: "Block Script", "Segoe UI", sans-serif;
+      font-size: clamp(56px, calc(72px * var(--timer-scale)), 104px);
+      line-height: 0.94;
+      letter-spacing: 0.02em;
+      text-align: center;
+      text-shadow:
+        0 0 24px rgba(0, 0, 0, 0.45),
+        0 0 34px rgba(46, 217, 176, 0.14);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-support {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-soft);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .support-chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .controls-panel {
+        width: min(92vw, 380px);
+      }
+
+      .button-grid,
+      .stat-grid,
+      .quick-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .timer-shell {
+        padding: 16px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-shell">
+    <button id="controlsToggle" class="controls-toggle" type="button" aria-expanded="true">
+      <span>Controls</span>
+      <span id="toggleState">Open</span>
+    </button>
+
+    <aside id="controlsPanel" class="controls-panel" aria-label="Timer controls">
+      <div class="panel-header">
+        <div>
+          <h1 class="panel-title">Subathon &amp; Follow Timer</h1>
+          <p class="panel-subtitle">
+            Local OBS timer with saved settings, fast add buttons, pause control and a clean bottom-centre clock.
+          </p>
+        </div>
+        <div id="panelStatus" class="status-pill">Running</div>
+      </div>
+
+      <section class="panel-section section-card">
+        <h2 class="section-label">Start Settings</h2>
+        <div class="field-grid">
+          <div class="field">
+            <label for="startHours">Hours</label>
+            <input id="startHours" type="number" min="0" max="999" step="1" value="6">
+          </div>
+          <div class="field">
+            <label for="startMinutes">Minutes</label>
+            <input id="startMinutes" type="number" min="0" max="59" step="1" value="0">
+          </div>
+          <div class="field">
+            <label for="followMinutes">Minutes per follow</label>
+            <input id="followMinutes" type="number" min="0" max="240" step="1" value="10">
+          </div>
+          <div class="field">
+            <label for="subMinutes">Minutes per sub</label>
+            <input id="subMinutes" type="number" min="0" max="240" step="1" value="20">
+          </div>
+          <div class="field">
+            <label for="warningMinutes">Warning threshold</label>
+            <input id="warningMinutes" type="number" min="0" max="240" step="1" value="30">
+          </div>
+          <div class="field">
+            <label for="timerScale">Timer size</label>
+            <input id="timerScale" type="number" min="0.6" max="1.6" step="0.05" value="1">
+          </div>
+        </div>
+        <p class="helper-text">
+          Reset uses the start settings above. Everything saves automatically in this browser source.
+        </p>
+      </section>
+
+      <section class="panel-section section-card">
+        <h2 class="section-label">Live Controls</h2>
+        <div class="button-row">
+          <button id="pauseButton" class="primary" type="button">Pause</button>
+          <button id="resetButton" class="danger" type="button">Reset Timer</button>
+        </div>
+        <div class="button-grid" style="margin-top: 10px;">
+          <button id="addFollowButton" type="button">+1 Follow</button>
+          <button id="applySubsButton" type="button">Add Subs</button>
+          <button id="applyMinutesButton" type="button">Add Minutes</button>
+        </div>
+        <div class="field-grid" style="margin-top: 10px;">
+          <div class="field">
+            <label for="subsCount">Subs to add</label>
+            <select id="subsCount"></select>
+          </div>
+          <div class="field">
+            <label for="manualMinutes">Manual minutes</label>
+            <input id="manualMinutes" type="number" min="-999" max="999" step="1" value="5">
+          </div>
+        </div>
+        <div class="quick-buttons" style="margin-top: 10px;">
+          <button type="button" data-quick-minutes="5">+5m</button>
+          <button type="button" data-quick-minutes="10">+10m</button>
+          <button type="button" data-quick-minutes="30">+30m</button>
+          <button type="button" data-quick-minutes="60">+60m</button>
+        </div>
+        <p class="helper-text">
+          You do not need hotkeys. This panel is the main interface, and every action can be done with the buttons here.
+        </p>
+      </section>
+
+      <section class="panel-section section-card">
+        <h2 class="section-label">Session Totals</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span id="followsStat" class="stat-value">0</span>
+            <span class="stat-label">Follows</span>
+          </div>
+          <div class="stat-card">
+            <span id="subsStat" class="stat-value">0</span>
+            <span class="stat-label">Subs</span>
+          </div>
+          <div class="stat-card">
+            <span id="addedStat" class="stat-value">0m</span>
+            <span class="stat-label">Added Time</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-section section-card">
+        <h2 class="section-label">Using It In OBS</h2>
+        <p class="shortcut-note">
+          The full control interface is the panel on the left. In OBS, right-click the Browser Source and choose
+          <strong>Interact</strong> to click the buttons. Hotkeys still exist as an optional extra, but they are not required.
+        </p>
+      </section>
+    </aside>
+
+    <div class="timer-stage" aria-live="polite">
+      <div id="eventBanner" class="event-banner">Timer ready</div>
+      <div id="timerShell" class="timer-shell">
+        <div class="timer-meta">
+          <span id="timerDot" class="timer-dot"></span>
+          <span id="timerModeLabel">Live Timer</span>
+        </div>
+        <div id="timerDisplay" class="timer-display">06:00:00</div>
+        <div class="timer-support">
+          <span id="timerStateChip" class="support-chip">Running</span>
+          <span id="timerSummaryChip" class="support-chip">Follow +10m / Sub +20m</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "teewee-local-subathon-timer-v1";
+
+    const defaultState = {
+      startHours: 6,
+      startMinutes: 0,
+      followMinutes: 10,
+      subMinutes: 20,
+      warningMinutes: 30,
+      timerScale: 1,
+      remainingMs: 6 * 60 * 60 * 1000,
+      paused: false,
+      lastTickAt: Date.now(),
+      follows: 0,
+      subs: 0,
+      totalAddedMinutes: 0,
+      controlsOpen: true
+    };
+
+    const els = {
+      controlsToggle: document.getElementById("controlsToggle"),
+      controlsPanel: document.getElementById("controlsPanel"),
+      toggleState: document.getElementById("toggleState"),
+      panelStatus: document.getElementById("panelStatus"),
+      startHours: document.getElementById("startHours"),
+      startMinutes: document.getElementById("startMinutes"),
+      followMinutes: document.getElementById("followMinutes"),
+      subMinutes: document.getElementById("subMinutes"),
+      warningMinutes: document.getElementById("warningMinutes"),
+      timerScale: document.getElementById("timerScale"),
+      pauseButton: document.getElementById("pauseButton"),
+      resetButton: document.getElementById("resetButton"),
+      addFollowButton: document.getElementById("addFollowButton"),
+      applySubsButton: document.getElementById("applySubsButton"),
+      applyMinutesButton: document.getElementById("applyMinutesButton"),
+      subsCount: document.getElementById("subsCount"),
+      manualMinutes: document.getElementById("manualMinutes"),
+      followsStat: document.getElementById("followsStat"),
+      subsStat: document.getElementById("subsStat"),
+      addedStat: document.getElementById("addedStat"),
+      timerShell: document.getElementById("timerShell"),
+      timerDisplay: document.getElementById("timerDisplay"),
+      timerDot: document.getElementById("timerDot"),
+      timerModeLabel: document.getElementById("timerModeLabel"),
+      timerStateChip: document.getElementById("timerStateChip"),
+      timerSummaryChip: document.getElementById("timerSummaryChip"),
+      eventBanner: document.getElementById("eventBanner")
+    };
+
+    let state = loadState();
+    let bannerTimeoutId = null;
+
+    for (let i = 1; i <= 25; i += 1) {
+      const option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = String(i);
+      els.subsCount.appendChild(option);
+    }
+    els.subsCount.value = "1";
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return { ...defaultState };
+        }
+        const parsed = JSON.parse(raw);
+        const merged = { ...defaultState, ...parsed };
+        if (typeof merged.remainingMs !== "number" || Number.isNaN(merged.remainingMs)) {
+          merged.remainingMs = getConfiguredStartMs(merged);
+        }
+        if (!merged.paused) {
+          const drift = Date.now() - (merged.lastTickAt || Date.now());
+          merged.remainingMs -= Math.max(0, drift);
+        }
+        merged.lastTickAt = Date.now();
+        return merged;
+      } catch (error) {
+        console.warn("Failed to load timer state.", error);
+        return { ...defaultState };
+      }
+    }
+
+    function saveState() {
+      state.lastTickAt = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function getConfiguredStartMs(source = state) {
+      const hours = Math.max(0, Number(source.startHours) || 0);
+      const minutes = Math.max(0, Number(source.startMinutes) || 0);
+      return ((hours * 60) + minutes) * 60 * 1000;
+    }
+
+    function minutesToMs(minutes) {
+      return (Number(minutes) || 0) * 60 * 1000;
+    }
+
+    function clampNumberInput(input, fallback) {
+      const parsed = Number(input.value);
+      if (Number.isNaN(parsed)) {
+        input.value = String(fallback);
+        return fallback;
+      }
+      return parsed;
+    }
+
+    function syncSettingsFromInputs() {
+      state.startHours = Math.max(0, clampNumberInput(els.startHours, defaultState.startHours));
+      state.startMinutes = Math.max(0, Math.min(59, clampNumberInput(els.startMinutes, defaultState.startMinutes)));
+      state.followMinutes = Math.max(0, clampNumberInput(els.followMinutes, defaultState.followMinutes));
+      state.subMinutes = Math.max(0, clampNumberInput(els.subMinutes, defaultState.subMinutes));
+      state.warningMinutes = Math.max(0, clampNumberInput(els.warningMinutes, defaultState.warningMinutes));
+      state.timerScale = Math.min(1.6, Math.max(0.6, clampNumberInput(els.timerScale, defaultState.timerScale)));
+
+      els.startHours.value = String(state.startHours);
+      els.startMinutes.value = String(state.startMinutes);
+      els.followMinutes.value = String(state.followMinutes);
+      els.subMinutes.value = String(state.subMinutes);
+      els.warningMinutes.value = String(state.warningMinutes);
+      els.timerScale.value = String(state.timerScale);
+      document.documentElement.style.setProperty("--timer-scale", String(state.timerScale));
+    }
+
+    function syncInputsFromState() {
+      els.startHours.value = String(state.startHours);
+      els.startMinutes.value = String(state.startMinutes);
+      els.followMinutes.value = String(state.followMinutes);
+      els.subMinutes.value = String(state.subMinutes);
+      els.warningMinutes.value = String(state.warningMinutes);
+      els.timerScale.value = String(state.timerScale);
+      document.documentElement.style.setProperty("--timer-scale", String(state.timerScale));
+    }
+
+    function formatDuration(ms) {
+      const negative = ms < 0;
+      const totalSeconds = Math.floor(Math.abs(ms) / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const padded = [hours, minutes, seconds].map((value, index) => {
+        if (index === 0 && hours > 99) {
+          return String(value);
+        }
+        return String(value).padStart(2, "0");
+      });
+      return negative ? `-${padded.join(":")}` : padded.join(":");
+    }
+
+    function setBanner(message) {
+      els.eventBanner.textContent = message;
+      els.eventBanner.classList.add("is-visible");
+      window.clearTimeout(bannerTimeoutId);
+      bannerTimeoutId = window.setTimeout(() => {
+        els.eventBanner.classList.remove("is-visible");
+      }, 2400);
+    }
+
+    function addMinutes(minutes, reason) {
+      const safeMinutes = Number(minutes) || 0;
+      if (safeMinutes === 0) {
+        return;
+      }
+      state.remainingMs += minutesToMs(safeMinutes);
+      if (safeMinutes > 0) {
+        state.totalAddedMinutes += safeMinutes;
+      }
+      saveState();
+      render();
+      const sign = safeMinutes > 0 ? "+" : "";
+      setBanner(`${reason} ${sign}${safeMinutes}m`);
+    }
+
+    function addFollow() {
+      syncSettingsFromInputs();
+      state.follows += 1;
+      addMinutes(state.followMinutes, "Follow");
+    }
+
+    function addSubs(count) {
+      syncSettingsFromInputs();
+      const subsToAdd = Math.max(1, Number(count) || 1);
+      state.subs += subsToAdd;
+      addMinutes(subsToAdd * state.subMinutes, `${subsToAdd} sub${subsToAdd === 1 ? "" : "s"}`);
+    }
+
+    function resetTimer() {
+      syncSettingsFromInputs();
+      state.remainingMs = getConfiguredStartMs();
+      state.paused = false;
+      state.follows = 0;
+      state.subs = 0;
+      state.totalAddedMinutes = 0;
+      state.lastTickAt = Date.now();
+      saveState();
+      render();
+      setBanner("Timer reset");
+    }
+
+    function togglePause() {
+      if (state.paused) {
+        state.paused = false;
+        state.lastTickAt = Date.now();
+        setBanner("Timer resumed");
+      } else {
+        state.paused = true;
+        setBanner("Timer paused");
+      }
+      saveState();
+      render();
+    }
+
+    function setControlsOpen(open) {
+      state.controlsOpen = open;
+      els.controlsPanel.classList.toggle("is-hidden", !open);
+      els.toggleState.textContent = open ? "Open" : "Hidden";
+      els.controlsToggle.setAttribute("aria-expanded", String(open));
+      saveState();
+    }
+
+    function render() {
+      const warningMs = minutesToMs(state.warningMinutes);
+      const isWarning = state.remainingMs > 0 && state.remainingMs <= warningMs;
+      const isFinished = state.remainingMs <= 0;
+
+      els.timerDisplay.textContent = formatDuration(state.remainingMs);
+      els.timerShell.classList.toggle("warning", isWarning);
+      els.timerShell.classList.toggle("danger", isFinished);
+      els.timerDot.classList.toggle("paused", state.paused);
+      els.timerModeLabel.textContent = isFinished ? "Overtime" : "Live Timer";
+      els.timerStateChip.textContent = state.paused ? "Paused" : (isFinished ? "Past Zero" : "Running");
+      els.timerSummaryChip.textContent = `Follow +${state.followMinutes}m / Sub +${state.subMinutes}m`;
+      els.followsStat.textContent = String(state.follows);
+      els.subsStat.textContent = String(state.subs);
+      els.addedStat.textContent = `${state.totalAddedMinutes}m`;
+      els.pauseButton.textContent = state.paused ? "Resume" : "Pause";
+
+      els.panelStatus.textContent = state.paused ? "Paused" : (isFinished ? "Overtime" : "Running");
+      els.panelStatus.classList.toggle("paused", state.paused);
+      els.panelStatus.classList.toggle("finished", isFinished);
+    }
+
+    function tick() {
+      const now = Date.now();
+      if (!state.paused) {
+        const delta = now - state.lastTickAt;
+        state.remainingMs -= delta;
+      }
+      state.lastTickAt = now;
+      render();
+    }
+
+    [
+      els.startHours,
+      els.startMinutes,
+      els.followMinutes,
+      els.subMinutes,
+      els.warningMinutes,
+      els.timerScale
+    ].forEach((input) => {
+      input.addEventListener("change", () => {
+        syncSettingsFromInputs();
+        saveState();
+        render();
+      });
+    });
+
+    els.controlsToggle.addEventListener("click", () => {
+      setControlsOpen(!state.controlsOpen);
+    });
+
+    els.pauseButton.addEventListener("click", togglePause);
+    els.resetButton.addEventListener("click", () => {
+      const confirmed = window.confirm("Reset the timer and session totals?");
+      if (confirmed) {
+        resetTimer();
+      }
+    });
+
+    els.addFollowButton.addEventListener("click", addFollow);
+    els.applySubsButton.addEventListener("click", () => addSubs(els.subsCount.value));
+    els.applyMinutesButton.addEventListener("click", () => {
+      const minutes = clampNumberInput(els.manualMinutes, 5);
+      addMinutes(minutes, "Manual");
+    });
+
+    document.querySelectorAll("[data-quick-minutes]").forEach((button) => {
+      button.addEventListener("click", () => {
+        addMinutes(Number(button.getAttribute("data-quick-minutes")), "Quick add");
+      });
+    });
+
+    window.addEventListener("keydown", (event) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName : "";
+      const isTyping = activeTag === "INPUT" || activeTag === "SELECT" || activeTag === "TEXTAREA";
+      if (isTyping) {
+        return;
+      }
+
+      if (event.code === "KeyF") {
+        event.preventDefault();
+        addFollow();
+      } else if (event.code === "KeyS") {
+        event.preventDefault();
+        addSubs(1);
+      } else if (event.code === "Space") {
+        event.preventDefault();
+        togglePause();
+      } else if (event.code === "KeyM") {
+        event.preventDefault();
+        const minutes = clampNumberInput(els.manualMinutes, 5);
+        addMinutes(minutes, "Manual");
+      } else if (event.code === "KeyH") {
+        event.preventDefault();
+        setControlsOpen(!state.controlsOpen);
+      }
+    });
+
+    syncInputsFromState();
+    setControlsOpen(state.controlsOpen);
+    render();
+    window.setInterval(tick, 250);
+    saveState();
+  </script>
+</body>
+</html>

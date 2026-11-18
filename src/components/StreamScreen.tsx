@@ -5,17 +5,29 @@ import AnimatedBackground from './AnimatedBackground';
 
 interface StreamScreenProps {
   title: string;
-  variant?: 'green' | 'red';
+  variant?: 'green' | 'red' | 'gta';
 }
 
 export default function StreamScreen({
   title: _title,
   variant = 'green',
 }: StreamScreenProps) {
+  const themeClass =
+    variant === 'red'
+      ? styles.redTheme
+      : variant === 'gta'
+        ? styles.gtaTheme
+        : styles.greenTheme;
+
+  const logoClass =
+    variant === 'red'
+      ? styles.logoRed
+      : variant === 'gta'
+        ? styles.logoGta
+        : styles.logoGreen;
+
   return (
-    <div
-      className={`${styles.container} ${variant === 'red' ? styles.redTheme : styles.greenTheme}`}
-    >
+    <div className={`${styles.container} ${themeClass}`}>
       <AnimatedBackground variant={variant} />
       <div className={styles.content}>
         <div className={styles.centerStack}>
@@ -23,7 +35,7 @@ export default function StreamScreen({
             <img
               src="/screens/assets/logo.png"
               alt="Stream Logo"
-              className={`${styles.logo} ${variant === 'red' ? styles.logoRed : styles.logoGreen}`}
+              className={`${styles.logo} ${logoClass}`}
               onError={(e) => {
                 const target = e.currentTarget as HTMLImageElement;
                 target.style.display = 'none';

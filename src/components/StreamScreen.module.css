@@ -32,6 +32,14 @@
     --pill-shadow: rgba(255, 42, 111, 0.18);
 }
 
+.gtaTheme {
+    --screen-background: #1a0a2e;
+    --logo-glow: rgba(243, 106, 120, 0.28);
+    --pill-hover: rgba(243, 106, 120, 0.12);
+    --pill-border-hover: rgba(243, 106, 120, 0.4);
+    --pill-shadow: rgba(243, 106, 120, 0.22);
+}
+
 /* Background is now handled by AnimatedBackground component, but we keep container for layout */
 
 .content {
@@ -75,6 +83,12 @@
 
 .logoRed {
     filter: drop-shadow(0 0 18px rgba(255, 42, 111, 0.14));
+}
+
+.logoGta {
+    filter:
+        drop-shadow(0 0 10px rgba(201, 52, 155, 0.18))
+        drop-shadow(0 0 22px rgba(243, 106, 120, 0.28));
 }
 
 .logoPlaceholder {
