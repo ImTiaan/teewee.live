@@ -20,6 +20,7 @@ export default function AnimatedBackground({
         <div className={styles.burst}></div>
       </div>
       <div className={styles.glowPulse}></div>
+      <div className={styles.horizonGlow}></div>
     </div>
   );
 }
