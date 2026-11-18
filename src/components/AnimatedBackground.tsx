@@ -19,6 +19,7 @@ export default function AnimatedBackground({
       <div className={styles.burstWrap}>
         <div className={styles.burst}></div>
       </div>
+      <div className={styles.glowPulse}></div>
     </div>
   );
 }
